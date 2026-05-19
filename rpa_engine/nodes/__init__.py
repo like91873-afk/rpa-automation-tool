@@ -9,6 +9,9 @@ from .python_nodes import PythonExecNode, PythonScriptNode
 from .file_nodes import FileOpenNode, FileReadNode, FileWriteNode, DirectoryListNode
 from .system_nodes import SystemCmdNode, PowerShellNode, GetComputerInfoNode
 from .sftp_nodes import SFTPConnectNode, SFTPUploadNode, SFTPDownloadNode, SFTPNewFileNode
+from .logic_nodes import ConditionNode, LoopNode
+from .math_nodes import MathOperationNode
+from .string_nodes import StringOperationNode
 
 # 节点注册表
 NODE_REGISTRY = {
@@ -21,10 +24,14 @@ NODE_REGISTRY = {
     "system_cmd": SystemCmdNode,
     "powershell": PowerShellNode,
     "computer_info": GetComputerInfoNode,
+    "condition": ConditionNode,
+    "loop": LoopNode,
     "sftp_connect": SFTPConnectNode,
     "sftp_upload": SFTPUploadNode,
     "sftp_download": SFTPDownloadNode,
     "sftp_new_file": SFTPNewFileNode,
+    "math_operation": MathOperationNode,
+    "string_operation": StringOperationNode,
 }
 
 
@@ -53,6 +60,10 @@ __all__ = [
     "SystemCmdNode",
     "PowerShellNode",
     "GetComputerInfoNode",
+    "ConditionNode",
+    "LoopNode",
+    "MathOperationNode",
+    "StringOperationNode",
     "SFTPConnectNode",
     "SFTPUploadNode",
     "SFTPDownloadNode",

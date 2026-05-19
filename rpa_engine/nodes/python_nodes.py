@@ -108,14 +108,15 @@ class PythonExecNode(BaseNode):
             stderr_output = sys.stderr.getvalue()
             error_message = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
 
-            return {
-                "python_code_result": {
-                    "success": False,
-                    "stdout": stdout_output,
-                    "stderr": stderr_output,
-                    "error": error_message
-                }
-            }
+            # 保存错误输出到上下文变量，方便后续节点使用
+            context.set_variable("python_code_result", {
+                "success": False,
+                "stdout": stdout_output,
+                "stderr": stderr_output,
+                "error": error_message
+            })
+
+            raise Exception(error_message)
 
         finally:
             sys.stdout = old_stdout

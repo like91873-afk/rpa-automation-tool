@@ -17,12 +17,16 @@ class NodeType(str, Enum):
     FILE_OPEN = "file_open"               # 打开文件
     FILE_READ = "file_read"               # 读取文件
     FILE_WRITE = "file_write"             # 写入文件
+    DIRECTORY_LIST = "directory_list"      # 列出目录
     SYSTEM_CMD = "system_cmd"             # 系统命令执行
+    POWERSHELL = "powershell"             # PowerShell命令
+    COMPUTER_INFO = "computer_info"       # 获取电脑信息
     CONDITION = "condition"               # 条件判断
     LOOP = "loop"                         # 循环
     SFTP_CONNECT = "sftp_connect"         # SFTP连接
     SFTP_UPLOAD = "sftp_upload"           # SFTP上传
     SFTP_DOWNLOAD = "sftp_download"       # SFTP下载
+    SFTP_NEW_FILE = "sftp_new_file"       # SFTP新建文件
     MATH_OPERATION = "math_operation"     # 数值运算
     STRING_OPERATION = "string_operation" # 字符串操作
 
@@ -111,7 +115,7 @@ class Flow(BaseModel):
 class ExecutionStatus(str, Enum):
     """执行状态"""
     PENDING = "pending"
-    RUNNING = "RUNNING"
+    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"

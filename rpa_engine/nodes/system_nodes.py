@@ -152,7 +152,7 @@ class PowerShellNode(BaseNode):
 
     def _create_definition(self) -> NodeDefinition:
         return NodeDefinition(
-            type=NodeType.SYSTEM_CMD,
+            type=NodeType.POWERSHELL,
             name="执行PowerShell",
             description="执行PowerShell命令",
             category="系统操作",
@@ -255,7 +255,7 @@ class GetComputerInfoNode(BaseNode):
 
     def _create_definition(self) -> NodeDefinition:
         return NodeDefinition(
-            type=NodeType.SYSTEM_CMD,
+            type=NodeType.COMPUTER_INFO,
             name="获取电脑信息",
             description="获取系统环境变量、文件夹路径等信息",
             category="系统操作",

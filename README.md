@@ -13,25 +13,33 @@
 ### 支持的节点类型
 
 #### Python相关
-- **Python代码执行** - 执行Python代码，支持变量传递
-- **Python脚本执行** - 执行外部Python脚本文件
+- **Python代码执行** (`python_exec`) - 执行Python代码，支持变量传递
+- **Python脚本执行** (`python_script`) - 执行外部Python脚本文件
 
 #### 文件操作
-- **打开文件** - 使用默认程序或指定应用打开文件
-- **读取文件** - 读取文件内容
-- **写入文件** - 写入或追加内容到文件
-- **列出目录** - 列出目录下的文件和子目录
+- **打开文件** (`file_open`) - 使用默认程序或指定应用打开文件
+- **读取文件** (`file_read`) - 读取文件内容
+- **写入文件** (`file_write`) - 写入或追加内容到文件
+- **列出目录** (`directory_list`) - 列出目录下的文件和子目录
 
 #### 系统操作
-- **执行命令行** - 支持CMD、PowerShell、Bash等
-- **执行PowerShell** - 专门的PowerShell命令执行
-- **获取电脑信息** - 获取环境变量、系统信息等
+- **执行命令行** (`system_cmd`) - 支持CMD、PowerShell、Bash等
+- **执行PowerShell** (`powershell`) - 专门的PowerShell命令执行
+- **获取电脑信息** (`computer_info`) - 获取环境变量、系统信息等
+
+#### 逻辑控制 (Phase 2)
+- **条件判断** (`condition`) - 支持表达式、比较运算、变量检查三种条件类型
+- **循环** (`loop`) - 支持范围循环、遍历集合、计数循环
+
+#### 数据处理 (Phase 2)
+- **数值运算** (`math_operation`) - 支持加减乘除、取模、幂运算、平方根、绝对值、取整等
+- **字符串操作** (`string_operation`) - 支持拼接、分割、替换、大小写转换、包含检查、格式化等
 
 #### 网络操作
-- **SFTP连接** - 创建SFTP连接
-- **SFTP上传** - 上传文件到SFTP服务器
-- **SFTP下载** - 从SFTP服务器下载文件
-- **新建SFTP文件** - 在SFTP服务器上创建文件
+- **SFTP连接** (`sftp_connect`) - 创建SFTP连接
+- **SFTP上传** (`sftp_upload`) - 上传文件到SFTP服务器
+- **SFTP下载** (`sftp_download`) - 从SFTP服务器下载文件
+- **新建SFTP文件** (`sftp_new_file`) - 在SFTP服务器上创建文件
 
 ## 快速开始
 
@@ -82,6 +90,8 @@ python -m rpa_engine validate sample.json
 
 ### Python API使用
 
+#### 基础流程
+
 ```python
 from rpa_engine import ExecutionEngine, Flow, NodeInstance
 
@@ -109,6 +119,84 @@ result = engine.execute_flow(flow)
 
 print(f"状态: {result.status}")
 print(f"变量: {result.variables}")
+```
+
+#### 条件判断示例
+
+```python
+from rpa_engine import Flow, NodeInstance, Connection, ExecutionEngine
+
+flow = Flow(
+    id="condition-flow",
+    name="条件判断流程",
+    nodes=[
+        NodeInstance(
+            id="node-calc",
+            type="math_operation",
+            name="计算",
+            inputs={
+                "operation": "multiply",
+                "operand_a": 10,
+                "operand_b": 5
+            }
+        ),
+        NodeInstance(
+            id="node-check",
+            type="condition",
+            name="判断大小",
+            inputs={
+                "condition_type": "expression",
+                "expression": "result > 30"
+            }
+        )
+    ],
+    connections=[
+        Connection(id="conn-1", source_node_id="node-calc", target_node_id="node-check")
+    ]
+)
+
+engine = ExecutionEngine()
+result = engine.execute_flow(flow)
+print(f"条件结果: {result.variables.get('result')}")  # True
+```
+
+#### 字符串处理示例
+
+```python
+from rpa_engine import Flow, NodeInstance, ExecutionEngine
+
+flow = Flow(
+    id="string-flow",
+    name="字符串处理流程",
+    nodes=[
+        NodeInstance(
+            id="node-1",
+            type="string_operation",
+            name="分割字符串",
+            inputs={
+                "operation": "split",
+                "input_string": "apple,banana,cherry",
+                "param1": ","
+            }
+        ),
+        NodeInstance(
+            id="node-2",
+            type="math_operation",
+            name="计算长度",
+            inputs={
+                "operation": "multiply",
+                "operand_a": "${count}",
+                "operand_b": 2
+            }
+        )
+    ],
+    connections=[
+        Connection(id="conn-1", source_node_id="node-1", target_node_id="node-2")
+    ]
+)
+
+engine = ExecutionEngine()
+result = engine.execute_flow(flow)
 ```
 
 ### REST API使用
@@ -149,21 +237,23 @@ rpa-automation-tool/
 │   │   ├── python_nodes.py # Python节点
 │   │   ├── file_nodes.py   # 文件操作节点
 │   │   ├── system_nodes.py # 系统操作节点
-│   │   └── sftp_nodes.py   # SFTP节点
+│   │   ├── sftp_nodes.py   # SFTP节点
+│   │   ├── logic_nodes.py  # 逻辑控制节点（条件/循环）
+│   │   ├── math_nodes.py   # 数学运算节点
+│   │   └── string_nodes.py # 字符串操作节点
 │   ├── api/                # REST API
 │   │   ├── __init__.py
 │   │   └── server.py       # FastAPI服务器
 │   └── utils/              # 工具函数
 │       └── __init__.py
 ├── tests/                  # 测试文件
-│   └── test_engine.py
+│   ├── test_engine.py      # 核心引擎测试
+│   └── test_phase2_nodes.py # Phase 2节点测试
 ├── examples/               # 示例流程
-│   ├── python_exec_example.json
-│   └── file_operations_example.json
 ├── pyproject.toml          # 项目配置
-├── requirements.txt        # 依赖列表
 ├── .gitignore             # Git忽略文件
-└── README.md              # 项目文档
+├── README.md              # 项目文档
+└── MVP.md                 # MVP设计文档
 ```
 
 ## 流程文件格式
@@ -179,13 +269,24 @@ rpa-automation-tool/
   "nodes": [
     {
       "id": "node-1",
-      "type": "python_exec",
-      "name": "节点名称",
+      "type": "math_operation",
+      "name": "计算",
       "inputs": {
-        "python_code": "print('Hello')",
-        "timeout": 1800
+        "operation": "add",
+        "operand_a": 10,
+        "operand_b": 20
       },
       "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "node-2",
+      "type": "condition",
+      "name": "判断",
+      "inputs": {
+        "condition_type": "expression",
+        "expression": "result > 25"
+      },
+      "position": {"x": 300, "y": 100}
     }
   ],
   "connections": [
@@ -208,9 +309,74 @@ rpa-automation-tool/
 ```json
 {
   "python_code": "print('${message}')",
-  "file_path": "${output_dir}/result.txt"
+  "file_path": "${output_dir}/result.txt",
+  "operand_a": "${previous_result}"
 }
 ```
+
+## 节点详细说明
+
+### 条件判断节点 (`condition`)
+
+支持三种条件类型：
+
+| 条件类型 | 说明 | 必需参数 |
+|---------|------|---------|
+| `expression` | Python布尔表达式 | `expression` |
+| `compare` | 两个值的比较 | `left_value`, `operator`, `right_value` |
+| `variable_check` | 检查变量是否存在且为真 | `variable_name` |
+
+比较运算符：`==`, `!=`, `>`, `>=`, `<`, `<=`
+
+### 循环节点 (`loop`)
+
+支持三种循环类型：
+
+| 循环类型 | 说明 | 必需参数 |
+|---------|------|---------|
+| `range` | 范围循环 | `start_num`, `end_num`, `step` |
+| `foreach` | 遍历集合 | `collection` |
+| `count` | 计数循环 | `count` |
+
+### 数学运算节点 (`math_operation`)
+
+支持的运算类型：
+
+| 运算 | 说明 | 需要操作数B |
+|-----|------|-----------|
+| `add` | 加法 | ✓ |
+| `subtract` | 减法 | ✓ |
+| `multiply` | 乘法 | ✓ |
+| `divide` | 除法 | ✓ |
+| `mod` | 取模 | ✓ |
+| `power` | 幂运算 | ✓ |
+| `sqrt` | 平方根 | ✗ |
+| `abs` | 绝对值 | ✗ |
+| `round` | 四舍五入 | ✗ |
+| `floor` | 向下取整 | ✗ |
+| `ceil` | 向上取整 | ✗ |
+| `min` | 最小值 | ✓ |
+| `max` | 最大值 | ✓ |
+
+### 字符串操作节点 (`string_operation`)
+
+支持的操作类型：
+
+| 操作 | 说明 | 参数1 | 参数2 |
+|-----|------|-------|-------|
+| `concat` | 拼接 | 拼接字符串 | - |
+| `split` | 分割 | 分隔符 | - |
+| `replace` | 替换 | 查找 | 替换为 |
+| `upper` | 转大写 | - | - |
+| `lower` | 转小写 | - | - |
+| `trim` | 去除空白 | - | - |
+| `contains` | 包含检查 | 子串 | - |
+| `startswith` | 前缀检查 | 前缀 | - |
+| `endswith` | 后缀检查 | 后缀 | - |
+| `format` | 格式化 | 参数 | - |
+| `length` | 长度 | - | - |
+| `substring` | 截取 | 起始 | 结束 |
+| `reverse` | 反转 | - | - |
 
 ## 开发指南
 
@@ -220,6 +386,7 @@ rpa-automation-tool/
 2. 继承 `BaseNode` 类
 3. 实现 `_create_definition()` 和 `execute()` 方法
 4. 在 `rpa_engine/nodes/__init__.py` 中注册新节点
+5. 在 `rpa_engine/models/schemas.py` 的 `NodeType` 枚举中添加类型
 
 示例：
 

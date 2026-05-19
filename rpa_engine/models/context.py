@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from .schemas import ExecutionStatus, NodeExecutionLog
+from .schemas import ExecutionStatus, NodeExecutionLog, NodeType
 
 
 class ExecutionContext:
@@ -81,7 +81,7 @@ class ExecutionContext:
         """添加执行日志"""
         self.execution_log.append(log)
 
-    def start_node_execution(self, node_id: str, node_name: str, node_type: str) -> None:
+    def start_node_execution(self, node_id: str, node_name: str, node_type: NodeType) -> None:
         """开始节点执行"""
         self.current_node_id = node_id
         self.status = ExecutionStatus.RUNNING
@@ -90,7 +90,7 @@ class ExecutionContext:
         self,
         node_id: str,
         node_name: str,
-        node_type: str,
+        node_type: NodeType,
         outputs: Dict[str, Any],
         logs: Optional[List[str]] = None
     ) -> None:
@@ -111,7 +111,7 @@ class ExecutionContext:
         self,
         node_id: str,
         node_name: str,
-        node_type: str,
+        node_type: NodeType,
         error: str,
         logs: Optional[List[str]] = None
     ) -> None:

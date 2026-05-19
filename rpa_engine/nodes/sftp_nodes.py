@@ -247,7 +247,7 @@ class SFTPNewFileNode(BaseNode):
 
     def _create_definition(self) -> NodeDefinition:
         return NodeDefinition(
-            type=NodeType.SFTP_UPLOAD,
+            type=NodeType.SFTP_NEW_FILE,
             name="新建SFTP文件",
             description="在SFTP服务器上创建新文件",
             category="网络操作",

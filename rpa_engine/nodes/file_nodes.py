@@ -338,7 +338,7 @@ class DirectoryListNode(BaseNode):
 
     def _create_definition(self) -> NodeDefinition:
         return NodeDefinition(
-            type=NodeType.FILE_READ,
+            type=NodeType.DIRECTORY_LIST,
             name="列出目录",
             description="列出目录下的文件和子目录",
             category="文件操作",

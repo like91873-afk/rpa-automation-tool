@@ -341,12 +341,41 @@ POST /api/flows/{flow_id}/execute - 执行流程
 
 ## 7. MVP开发计划
 
-| 阶段 | 功能 | 预计时间 |
-|------|------|----------|
-| Phase 1 | 核心数据模型 + 执行引擎 | 1 周 |
-| Phase 2 | Python执行节点 + 文件操作节点 | 1 周 |
-| Phase 3 | REST API + 简单前端原型 | 1 周 |
-| Phase 4 | 测试 + 文档 + 部署 | 1 周 |
+| 阶段 | 功能 | 状态 | 预计时间 |
+|------|------|------|----------|
+| Phase 1 | 核心数据模型 + 执行引擎 + REST API | ✅ 已完成 | 1 周 |
+| Phase 2 | Python执行节点 + 文件操作 + 系统命令 + SFTP + 逻辑控制 + 数据处理 | ✅ 已完成 | 1 周 |
+| Phase 3 | 前端设计器原型 (React/Vue + ReactFlow) | 📋 待开始 | 1 周 |
+| Phase 4 | 测试完善 + 文档 + 生产部署 | 📋 待开始 | 1 周 |
+
+### Phase 2 新增功能
+
+#### 逻辑控制节点
+- **条件判断** (`condition`) - 支持三种条件类型:
+  - `expression`: Python布尔表达式
+  - `compare`: 比较运算（==, !=, >, >=, <, <=）
+  - `variable_check`: 变量存在性和真值检查
+- **循环** (`loop`) - 支持三种循环类型:
+  - `foreach`: 遍历列表/集合
+  - `range`: 数字范围循环
+  - `count`: 计数循环
+
+#### 数据处理节点
+- **数值运算** (`math_operation`) - 支持运算:
+  - 基本运算: add, subtract, multiply, divide, mod, power
+  - 数学函数: sqrt, abs, round, floor, ceil, min, max
+- **字符串操作** (`string_operation`) - 支持操作:
+  - 操作: concat, split, replace, upper, lower, trim, strip
+  - 检查: contains, startswith, endswith
+  - 处理: format, length, substring, reverse
+
+#### Bug修复
+- 修复 `ExecutionStatus.RUNNING` 枚举值大小写不一致问题
+- 修复 `NodeExecutionLog` 中 `node_type` 类型不匹配问题
+- 修复 `DirectoryListNode` 使用错误的 `NodeType` 问题
+- 修复 `PowerShellNode` 和 `GetComputerInfoNode` 共享 `SYSTEM_CMD` 类型问题
+- 修复 `pyproject.toml` 中错误的 `build-backend` 配置
+- 添加缺失的 `.gitignore` 文件
 
 ---
 

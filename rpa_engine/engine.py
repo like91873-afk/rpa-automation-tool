@@ -111,18 +111,20 @@ class ExecutionEngine:
 
     def _execute_node(self, node: NodeInstance, context: ExecutionContext, debug: bool = False) -> None:
         """执行单个节点"""
-        node_name = node.name or node.type.value if isinstance(node.type, NodeType) else node.type
+        # 统一使用NodeType枚举
+        node_type = node.type if isinstance(node.type, NodeType) else NodeType(node.type)
+        node_name = node.name or node_type.value
 
         if debug:
             print(f"[DEBUG] 执行节点: {node_name} ({node.id})")
 
         # 开始执行
-        context.start_node_execution(node.id, node_name, node.type)
+        context.start_node_execution(node.id, node_name, node_type)
 
         # 获取节点类
-        node_class = get_node_class(node.type if isinstance(node.type, str) else node.type.value)
+        node_class = get_node_class(node_type.value)
         if not node_class:
-            raise ValueError(f"未知节点类型: {node.type}")
+            raise ValueError(f"未知节点类型: {node_type}")
 
         # 创建节点实例
         executor = node_class()
@@ -149,7 +151,7 @@ class ExecutionEngine:
             context.complete_node_execution(
                 node_id=node.id,
                 node_name=node_name,
-                node_type=node.type,
+                node_type=node_type,
                 outputs=outputs
             )
 
@@ -161,7 +163,7 @@ class ExecutionEngine:
             context.fail_node_execution(
                 node_id=node.id,
                 node_name=node_name,
-                node_type=node.type,
+                node_type=node_type,
                 error=str(e)
             )
             raise
