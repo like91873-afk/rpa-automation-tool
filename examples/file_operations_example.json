@@ -1,0 +1,67 @@
+{
+  "id": "example-file-operations",
+  "name": "文件操作示例",
+  "description": "演示文件读写和目录操作",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "python_exec",
+      "name": "创建测试数据",
+      "inputs": {
+        "python_code": "# 创建测试数据\ntest_data = {\n    \"users\": [\n        {\"name\": \"张三\", \"age\": 25},\n        {\"name\": \"李四\", \"age\": 30},\n        {\"name\": \"王五\", \"age\": 28}\n    ]\n}\n\nimport json\ndata_json = json.dumps(test_data, ensure_ascii=False, indent=2)\nprint(f'创建了测试数据: {len(test_data[\"users\"])} 个用户')",
+        "timeout": 1800
+      },
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "node-2",
+      "type": "file_write",
+      "name": "写入JSON文件",
+      "inputs": {
+        "file_path": "output/users.json",
+        "content": "${data_json}",
+        "mode": "overwrite"
+      },
+      "position": {"x": 300, "y": 100}
+    },
+    {
+      "id": "node-3",
+      "type": "file_read",
+      "name": "读取JSON文件",
+      "inputs": {
+        "file_path": "output/users.json",
+        "encoding": "utf-8"
+      },
+      "position": {"x": 500, "y": 100}
+    },
+    {
+      "id": "node-4",
+      "type": "python_exec",
+      "name": "处理数据",
+      "inputs": {
+        "python_code": "# 解析读取的数据\nimport json\nusers = json.loads(file_content)\n\n# 处理数据\nfor user in users[\"users\"]:\n    user[\"age_group\"] = \"青年\" if user[\"age\"] < 30 else \"中年\"\n    print(f'{user[\"name\"]}: {user[\"age\"]}岁 ({user[\"age_group\"]})')\n\nprocessed_data = json.dumps(users, ensure_ascii=False, indent=2)\nprint('\\n数据处理完成!')",
+        "timeout": 1800
+      },
+      "position": {"x": 700, "y": 100}
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "source_node_id": "node-1",
+      "target_node_id": "node-2"
+    },
+    {
+      "id": "conn-2",
+      "source_node_id": "node-2",
+      "target_node_id": "node-3"
+    },
+    {
+      "id": "conn-3",
+      "source_node_id": "node-3",
+      "target_node_id": "node-4"
+    }
+  ],
+  "variables": {}
+}
