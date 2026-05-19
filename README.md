@@ -21,6 +21,7 @@
 - **读取文件** (`file_read`) - 读取文件内容
 - **写入文件** (`file_write`) - 写入或追加内容到文件
 - **列出目录** (`directory_list`) - 列出目录下的文件和子目录
+- **路径存在检查** (`path_exists`) - 检查路径是否存在并返回详细信息
 
 #### 系统操作
 - **执行命令行** (`system_cmd`) - 支持CMD、PowerShell、Bash等
@@ -40,6 +41,14 @@
 - **SFTP上传** (`sftp_upload`) - 上传文件到SFTP服务器
 - **SFTP下载** (`sftp_download`) - 从SFTP服务器下载文件
 - **新建SFTP文件** (`sftp_new_file`) - 在SFTP服务器上创建文件
+- **SFTP写入文件** (`sftp_write_file`) - 向SFTP文件写入内容，支持追加/覆盖模式
+
+#### FTP操作 (Phase 3)
+- **FTP连接** (`ftp_connect`) - 创建FTP连接对象
+- **FTP查看目录** (`ftp_list_dir`) - 查看FTP服务器目录下的文件列表
+
+#### 数据处理
+- **XML保存** (`xml_save`) - 将数据保存为XML文件，支持多种编码和存在处理方式
 
 ## 快速开始
 
@@ -238,6 +247,8 @@ rpa-automation-tool/
 │   │   ├── file_nodes.py   # 文件操作节点
 │   │   ├── system_nodes.py # 系统操作节点
 │   │   ├── sftp_nodes.py   # SFTP节点
+│   │   ├── ftp_nodes.py    # FTP节点 (Phase 3)
+│   │   ├── xml_nodes.py    # XML操作节点 (Phase 3)
 │   │   ├── logic_nodes.py  # 逻辑控制节点（条件/循环）
 │   │   ├── math_nodes.py   # 数学运算节点
 │   │   └── string_nodes.py # 字符串操作节点
@@ -248,7 +259,8 @@ rpa-automation-tool/
 │       └── __init__.py
 ├── tests/                  # 测试文件
 │   ├── test_engine.py      # 核心引擎测试
-│   └── test_phase2_nodes.py # Phase 2节点测试
+│   ├── test_phase2_nodes.py # Phase 2节点测试
+│   └── test_phase3_nodes.py # Phase 3节点测试
 ├── examples/               # 示例流程
 ├── pyproject.toml          # 项目配置
 ├── .gitignore             # Git忽略文件

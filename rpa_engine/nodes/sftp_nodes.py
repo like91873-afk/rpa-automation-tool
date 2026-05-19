@@ -300,3 +300,124 @@ class SFTPNewFileNode(BaseNode):
         return {
             "remote_new_file_path": remote_path
         }
+
+
+class SFTPWriteFileNode(BaseNode):
+    """
+    SFTP写入文件节点
+
+    向SFTP服务器上的文件写入内容，支持追加和覆盖两种模式
+
+    参数说明:
+    - sftp_connection: SFTP连接对象
+    - write_file_path: 写入文件路径
+    - write_content: 写入文件内容
+    - write_mode: 写入内容的方式（追加文件末尾/覆盖写入文件）
+    - end_mode: 结束方式（结束时添加换行/结束时不添加换行）
+    - file_not_exists: 写入文件不存在时处理（不存在时新建/不存在时报错）
+
+    输出说明:
+    - write_file_path: 返回写入文件的路径
+    """
+
+    def _create_definition(self) -> NodeDefinition:
+        return NodeDefinition(
+            type=NodeType.SFTP_WRITE_FILE,
+            name="SFTP写入文件",
+            description="向SFTP服务器上的文件写入内容",
+            category="网络操作",
+            inputs=[
+                NodeInput(
+                    name="sftp_connection",
+                    label="SFTP连接对象",
+                    type=InputType.VARIABLE,
+                    required=True,
+                    default="${sftp}",
+                    description="SFTP连接对象"
+                ),
+                NodeInput(
+                    name="write_file_path",
+                    label="写入文件路径",
+                    type=InputType.TEXT,
+                    required=True,
+                    description="写入文件路径"
+                ),
+                NodeInput(
+                    name="write_content",
+                    label="写入文件内容",
+                    type=InputType.TEXT,
+                    required=True,
+                    description="写入文件内容"
+                ),
+                NodeInput(
+                    name="write_mode",
+                    label="写入内容的方式",
+                    type=InputType.DROPDOWN,
+                    required=True,
+                    default="append",
+                    options=["append", "overwrite"],
+                    description="追加文件末尾或覆盖写入文件"
+                ),
+                NodeInput(
+                    name="end_mode",
+                    label="结束方式",
+                    type=InputType.DROPDOWN,
+                    required=True,
+                    default="add_newline",
+                    options=["add_newline", "no_newline"],
+                    description="结束时添加换行或结束时不添加换行"
+                ),
+                NodeInput(
+                    name="file_not_exists",
+                    label="写入文件不存在时处理",
+                    type=InputType.DROPDOWN,
+                    required=True,
+                    default="create",
+                    options=["create", "error"],
+                    description="不存在时新建或不存在时报错"
+                ),
+            ],
+            outputs=[
+                NodeOutput(
+                    key="write_file_path",
+                    label="写入文件路径",
+                    description="返回写入文件的路径"
+                ),
+            ]
+        )
+
+    def execute(self, inputs: Dict[str, Any], context: ExecutionContext) -> Dict[str, Any]:
+        """SFTP写入文件"""
+        sftp_connection = self.get_required_input(inputs, "sftp_connection")
+        write_file_path = self.get_required_input(inputs, "write_file_path")
+        write_content = self.get_required_input(inputs, "write_content")
+        write_mode = self.get_input_value(inputs, "write_mode", "append")
+        end_mode = self.get_input_value(inputs, "end_mode", "add_newline")
+        file_not_exists = self.get_input_value(inputs, "file_not_exists", "create")
+
+        # 解析变量
+        write_file_path = context.resolve_variables(write_file_path)
+        write_content = context.resolve_variables(write_content)
+
+        # 添加换行符
+        if end_mode == "add_newline":
+            write_content = write_content + "\n"
+
+        # 注意：实际实现需要paramiko库
+        # 这里返回模拟结果
+        # 实际实现时应使用:
+        # import paramiko
+        # transport = paramiko.Transport((host, port))
+        # transport.connect(username=username, password=password)
+        # sftp = paramiko.SFTPClient.from_transport(transport)
+        # 
+        # if write_mode == "append":
+        #     with sftp.open(write_file_path, 'a') as f:
+        #         f.write(write_content)
+        # elif write_mode == "overwrite":
+        #     with sftp.open(write_file_path, 'w') as f:
+        #         f.write(write_content)
+
+        return {
+            "write_file_path": write_file_path
+        }

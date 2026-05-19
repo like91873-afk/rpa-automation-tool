@@ -691,11 +691,12 @@ class TestPhase2Integration:
 
         expected_nodes = [
             "python_exec", "python_script",
-            "file_open", "file_read", "file_write", "directory_list",
+            "file_open", "file_read", "file_write", "directory_list", "path_exists",
             "system_cmd", "powershell", "computer_info",
             "condition", "loop",
-            "sftp_connect", "sftp_upload", "sftp_download", "sftp_new_file",
-            "math_operation", "string_operation",
+            "sftp_connect", "sftp_upload", "sftp_download", "sftp_new_file", "sftp_write_file",
+            "ftp_connect", "ftp_list_dir",
+            "xml_save", "math_operation", "string_operation",
         ]
 
         for node_type in expected_nodes:
@@ -708,11 +709,12 @@ class TestPhase2Integration:
         """测试NodeType枚举完整性"""
         expected_types = [
             "python_exec", "python_script",
-            "file_open", "file_read", "file_write", "directory_list",
+            "file_open", "file_read", "file_write", "directory_list", "path_exists",
             "system_cmd", "powershell", "computer_info",
             "condition", "loop",
-            "sftp_connect", "sftp_upload", "sftp_download", "sftp_new_file",
-            "math_operation", "string_operation",
+            "sftp_connect", "sftp_upload", "sftp_download", "sftp_new_file", "sftp_write_file",
+            "ftp_connect", "ftp_list_dir",
+            "xml_save", "math_operation", "string_operation",
         ]
 
         for type_value in expected_types:

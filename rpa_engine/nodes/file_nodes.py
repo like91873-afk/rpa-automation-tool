@@ -438,3 +438,99 @@ class DirectoryListNode(BaseNode):
                     "error": str(e)
                 }
             }
+
+
+class PathExistsNode(BaseNode):
+    """
+    路径存在检查节点
+
+    检查指定路径是否存在，返回路径的详细信息
+
+    参数说明:
+    - path: 要检查的路径
+
+    输出说明:
+    - path_info: 路径信息字典
+        - path: 原始路径
+        - exists: 是否存在
+        - type: 类型（file/directory）
+        - dir: 所在目录
+        - name: 文件/目录名
+        - size: 大小
+        - create_time: 创建时间
+        - modify_time: 修改时间
+    """
+
+    def _create_definition(self) -> NodeDefinition:
+        return NodeDefinition(
+            type=NodeType.PATH_EXISTS,
+            name="路径存在检查",
+            description="检查路径是否存在并返回详细信息",
+            category="文件操作",
+            inputs=[
+                NodeInput(
+                    name="path",
+                    label="检查路径",
+                    type=InputType.FILE_PATH,
+                    required=True,
+                    description="要检查的文件或目录路径"
+                ),
+            ],
+            outputs=[
+                NodeOutput(
+                    key="path_info",
+                    label="路径信息",
+                    description="路径的详细信息字典"
+                ),
+                NodeOutput(
+                    key="exists",
+                    label="是否存在",
+                    description="路径是否存在（True/False）"
+                ),
+            ]
+        )
+
+    def execute(self, inputs: Dict[str, Any], context: ExecutionContext) -> Dict[str, Any]:
+        """检查路径是否存在"""
+        path = self.get_required_input(inputs, "path")
+
+        # 解析变量
+        path = context.resolve_variables(path)
+
+        # 路径不存在时的返回格式（与文档一致）
+        if not os.path.exists(path):
+            return {
+                "path_info": {
+                    "path": path,
+                    "esxit": False  # 保持与文档一致的拼写
+                },
+                "exists": False
+            }
+
+        try:
+            stat = os.stat(path)
+            path_info = {
+                "path": path,
+                "esxit": True,  # 保持与文档一致的拼写
+                "type": "file" if os.path.isfile(path) else "directory",
+                "dir": os.path.dirname(path),
+                "name": os.path.basename(path),
+                "size": stat.st_size,
+                "create_time": stat.st_ctime,
+                "modify_time": stat.st_mtime,
+            }
+
+            return {
+                "path_info": path_info,
+                "exists": True
+            }
+
+        except Exception as e:
+            return {
+                "path_info": {
+                    "path": path,
+                    "esxit": False,
+                    "error": str(e)
+                },
+                "exists": False
+            }

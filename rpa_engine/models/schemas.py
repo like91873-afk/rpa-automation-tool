@@ -18,6 +18,7 @@ class NodeType(str, Enum):
     FILE_READ = "file_read"               # 读取文件
     FILE_WRITE = "file_write"             # 写入文件
     DIRECTORY_LIST = "directory_list"      # 列出目录
+    PATH_EXISTS = "path_exists"           # 路径存在检查
     SYSTEM_CMD = "system_cmd"             # 系统命令执行
     POWERSHELL = "powershell"             # PowerShell命令
     COMPUTER_INFO = "computer_info"       # 获取电脑信息
@@ -27,6 +28,10 @@ class NodeType(str, Enum):
     SFTP_UPLOAD = "sftp_upload"           # SFTP上传
     SFTP_DOWNLOAD = "sftp_download"       # SFTP下载
     SFTP_NEW_FILE = "sftp_new_file"       # SFTP新建文件
+    SFTP_WRITE_FILE = "sftp_write_file"   # SFTP写入文件
+    FTP_CONNECT = "ftp_connect"           # FTP连接
+    FTP_LIST_DIR = "ftp_list_dir"         # FTP查看目录
+    XML_SAVE = "xml_save"                 # 数据保存为XML
     MATH_OPERATION = "math_operation"     # 数值运算
     STRING_OPERATION = "string_operation" # 字符串操作
 

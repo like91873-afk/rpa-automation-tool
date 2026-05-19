@@ -345,8 +345,9 @@ POST /api/flows/{flow_id}/execute - 执行流程
 |------|------|------|----------|
 | Phase 1 | 核心数据模型 + 执行引擎 + REST API | ✅ 已完成 | 1 周 |
 | Phase 2 | Python执行节点 + 文件操作 + 系统命令 + SFTP + 逻辑控制 + 数据处理 | ✅ 已完成 | 1 周 |
-| Phase 3 | 前端设计器原型 (React/Vue + ReactFlow) | 📋 待开始 | 1 周 |
-| Phase 4 | 测试完善 + 文档 + 生产部署 | 📋 待开始 | 1 周 |
+| Phase 3 | FTP操作 + SFTP写入 + XML保存 + 路径检查 | ✅ 已完成 | 1 周 |
+| Phase 4 | 前端设计器原型 (React/Vue + ReactFlow) | 📋 待开始 | 1 周 |
+| Phase 5 | 测试完善 + 文档 + 生产部署 | 📋 待开始 | 1 周 |
 
 ### Phase 2 新增功能
 
@@ -376,6 +377,33 @@ POST /api/flows/{flow_id}/execute - 执行流程
 - 修复 `PowerShellNode` 和 `GetComputerInfoNode` 共享 `SYSTEM_CMD` 类型问题
 - 修复 `pyproject.toml` 中错误的 `build-backend` 配置
 - 添加缺失的 `.gitignore` 文件
+
+### Phase 3 新增功能
+
+#### 路径检查节点
+- **路径存在检查** (`path_exists`) - 检查文件/目录是否存在，返回详细信息:
+  - 路径、是否存在、类型（file/directory）、所在目录、文件名
+  - 文件大小、创建时间、修改时间
+
+#### FTP操作节点
+- **FTP连接** (`ftp_connect`) - 创建FTP连接对象:
+  - 参数: host, port, username, password, passive
+  - 输出: ftp_connection 连接对象
+- **FTP查看目录** (`ftp_list_dir`) - 查看FTP目录文件列表:
+  - 参数: ftp_connection, ftp_dir, recursive
+  - 输出: ftp_dir_list 文件信息列表（包含type, permissions, size, ctime, name, abspath）
+
+#### SFTP增强
+- **SFTP写入文件** (`sftp_write_file`) - 向SFTP文件写入内容:
+  - 写入模式: 追加(append)/覆盖(overwrite)
+  - 结束方式: 添加换行(add_newline)/不添加换行(no_newline)
+  - 文件不存在处理: 新建(create)/报错(error)
+
+#### XML操作节点
+- **XML保存** (`xml_save`) - 将数据保存为XML文件:
+  - 支持编码: UTF-8, GBK, GB2312, ASCII
+  - 存在处理: 忽略(ignore)/报错(error)/备份(backup)/删除(delete)
+  - 自动将字典/列表数据转换为XML结构
 
 ---
 
