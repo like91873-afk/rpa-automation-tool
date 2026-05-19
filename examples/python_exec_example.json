@@ -1,0 +1,52 @@
+{
+  "id": "example-python-exec",
+  "name": "Python代码执行示例",
+  "description": "演示Python代码执行节点的使用",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "python_exec",
+      "name": "执行计算",
+      "inputs": {
+        "python_code": "# 执行简单计算\na = 10\nb = 20\nresult = a + b\nprint(f'{a} + {b} = {result}')\n\n# 保存结果到全局变量\ncalculation_result = result",
+        "timeout": 1800
+      },
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "node-2",
+      "type": "python_exec",
+      "name": "格式化输出",
+      "inputs": {
+        "python_code": "# 使用上一个节点的结果\nmessage = f'计算结果是: {calculation_result}'\nprint(message)\n\n# 创建输出文件内容\noutput_content = f\"\"\"计算报告\n============\n结果: {calculation_result}\n时间: {__import__(\"datetime\").datetime.now()}\"\"\"",
+        "timeout": 1800
+      },
+      "position": {"x": 300, "y": 100}
+    },
+    {
+      "id": "node-3",
+      "type": "file_write",
+      "name": "保存结果",
+      "inputs": {
+        "file_path": "output/calculation_report.txt",
+        "content": "${output_content}",
+        "mode": "overwrite"
+      },
+      "position": {"x": 500, "y": 100}
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "source_node_id": "node-1",
+      "target_node_id": "node-2"
+    },
+    {
+      "id": "conn-2",
+      "source_node_id": "node-2",
+      "target_node_id": "node-3"
+    }
+  ],
+  "variables": {}
+}
