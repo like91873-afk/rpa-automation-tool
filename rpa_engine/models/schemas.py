@@ -194,3 +194,119 @@ class FlowSaveRequest(BaseModel):
     """流程保存请求"""
     flow: Flow = Field(..., description="流程定义")
     overwrite: bool = Field(default=True, description="是否覆盖")
+
+
+# ============= 调度系统模型 =============
+
+class TriggerType(str, Enum):
+    """触发器类型"""
+    CRON = "cron"                # Cron表达式触发
+    INTERVAL = "interval"        # 固定间隔触发
+    ONCE = "once"               # 单次定时执行
+    WEBHOOK = "webhook"         # Webhook触发
+    FILE_WATCH = "file_watch"   # 文件监控触发
+    MANUAL = "manual"           # 手动触发
+
+
+class ScheduleStatus(str, Enum):
+    """调度任务状态"""
+    ACTIVE = "active"       # 活跃
+    PAUSED = "paused"       # 暂停
+    COMPLETED = "completed" # 已完成（一次性任务）
+    FAILED = "failed"       # 失败
+
+
+class FileWatchEvent(str, Enum):
+    """文件监控事件类型"""
+    CREATED = "created"     # 文件创建
+    MODIFIED = "modified"   # 文件修改
+    DELETED = "deleted"     # 文件删除
+    MOVED = "moved"         # 文件移动
+
+
+class Schedule(BaseModel):
+    """调度任务定义"""
+    id: str = Field(..., description="调度任务ID")
+    name: str = Field(..., description="任务名称")
+    description: Optional[str] = Field(default=None, description="任务描述")
+    flow_id: str = Field(..., description="关联流程ID")
+    trigger_type: TriggerType = Field(..., description="触发器类型")
+    # Cron触发配置
+    cron_expression: Optional[str] = Field(default=None, description="Cron表达式 (分 时 日 月 周)")
+    timezone: str = Field(default="Asia/Shanghai", description="时区")
+    # 间隔触发配置
+    interval_seconds: Optional[int] = Field(default=None, description="间隔秒数")
+    # 单次触发配置
+    run_at: Optional[datetime] = Field(default=None, description="执行时间")
+    # Webhook配置
+    webhook_token: Optional[str] = Field(default=None, description="Webhook访问令牌")
+    webhook_secret: Optional[str] = Field(default=None, description="Webhook验证密钥")
+    # 文件监控配置
+    watch_path: Optional[str] = Field(default=None, description="监控路径")
+    watch_events: List[FileWatchEvent] = Field(default_factory=lambda: [FileWatchEvent.CREATED], description="监控事件类型")
+    watch_pattern: str = Field(default="*", description="文件匹配模式 (*.txt)")
+    watch_recursive: bool = Field(default=False, description="是否递归监控子目录")
+    # 通用配置
+    initial_variables: Dict[str, Any] = Field(default_factory=dict, description="初始变量")
+    max_retries: int = Field(default=0, description="最大重试次数")
+    retry_delay_seconds: int = Field(default=60, description="重试间隔(秒)")
+    timeout: int = Field(default=3600, description="执行超时(秒)")
+    status: ScheduleStatus = Field(default=ScheduleStatus.ACTIVE, description="任务状态")
+    # 运行统计
+    created_at: datetime = Field(default_factory=datetime.now, description="创建时间")
+    last_run_at: Optional[datetime] = Field(default=None, description="上次执行时间")
+    next_run_at: Optional[datetime] = Field(default=None, description="下次执行时间")
+    run_count: int = Field(default=0, description="执行次数")
+    success_count: int = Field(default=0, description="成功次数")
+    fail_count: int = Field(default=0, description="失败次数")
+
+
+class ScheduleCreateRequest(BaseModel):
+    """创建调度任务请求"""
+    name: str = Field(..., description="任务名称")
+    description: Optional[str] = Field(default=None, description="任务描述")
+    flow_id: str = Field(..., description="关联流程ID")
+    trigger_type: TriggerType = Field(..., description="触发器类型")
+    cron_expression: Optional[str] = Field(default=None, description="Cron表达式")
+    timezone: str = Field(default="Asia/Shanghai", description="时区")
+    interval_seconds: Optional[int] = Field(default=None, description="间隔秒数")
+    run_at: Optional[datetime] = Field(default=None, description="执行时间")
+    webhook_token: Optional[str] = Field(default=None, description="Webhook令牌")
+    webhook_secret: Optional[str] = Field(default=None, description="Webhook密钥")
+    watch_path: Optional[str] = Field(default=None, description="监控路径")
+    watch_events: List[FileWatchEvent] = Field(default_factory=lambda: [FileWatchEvent.CREATED])
+    watch_pattern: str = Field(default="*")
+    watch_recursive: bool = Field(default=False)
+    initial_variables: Dict[str, Any] = Field(default_factory=dict)
+    max_retries: int = Field(default=0)
+    retry_delay_seconds: int = Field(default=60)
+    timeout: int = Field(default=3600)
+
+
+class ScheduleUpdateRequest(BaseModel):
+    """更新调度任务请求"""
+    name: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)
+    cron_expression: Optional[str] = Field(default=None)
+    interval_seconds: Optional[int] = Field(default=None)
+    run_at: Optional[datetime] = Field(default=None)
+    initial_variables: Optional[Dict[str, Any]] = Field(default=None)
+    max_retries: Optional[int] = Field(default=None)
+    timeout: Optional[int] = Field(default=None)
+    status: Optional[ScheduleStatus] = Field(default=None)
+
+
+class ExecutionHistory(BaseModel):
+    """执行历史记录"""
+    id: str = Field(..., description="记录ID")
+    schedule_id: str = Field(..., description="调度任务ID")
+    flow_id: str = Field(..., description="流程ID")
+    execution_id: Optional[str] = Field(default=None, description="流程执行ID")
+    trigger_type: TriggerType = Field(..., description="触发类型")
+    status: ExecutionStatus = Field(..., description="执行状态")
+    started_at: datetime = Field(default_factory=datetime.now, description="开始时间")
+    completed_at: Optional[datetime] = Field(default=None, description="完成时间")
+    duration_ms: Optional[int] = Field(default=None, description="执行时长(ms)")
+    error: Optional[str] = Field(default=None, description="错误信息")
+    trigger_info: Optional[str] = Field(default=None, description="触发信息")
+    retry_count: int = Field(default=0, description="重试次数")

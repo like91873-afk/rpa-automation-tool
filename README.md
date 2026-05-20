@@ -545,6 +545,70 @@ python -m rpa_engine serve --host 0.0.0.0 --port 8000
 - 💾 流程保存/加载
 - ▶️ 一键执行流程
 - 📊 执行结果展示
+- ⏰ 调度任务管理
+- 🔗 Webhook触发
+- 📁 文件监控触发
+- 📋 执行历史记录
+
+## 调度系统
+
+项目内置完整的调度系统，支持多种触发方式：
+
+### 触发器类型
+
+| 类型 | 说明 | 配置 |
+|------|------|------|
+| `cron` | Cron表达式定时 | `0 9 * * 1-5` (工作日9点) |
+| `interval` | 固定间隔 | `interval_seconds: 300` (每5分钟) |
+| `once` | 单次执行 | `run_at: ISO时间` |
+| `webhook` | HTTP请求触发 | 自动生成URL和Token |
+| `file_watch` | 文件变化触发 | 监控目录+文件模式 |
+
+### 使用示例
+
+```python
+from rpa_engine.scheduler import FlowScheduler
+from rpa_engine.models.schemas import Schedule, TriggerType
+
+scheduler = FlowScheduler(flow_executor=my_executor)
+
+# 创建Cron定时任务
+schedule = Schedule(
+    id="daily-report",
+    name="每日报表",
+    flow_id="report-flow",
+    trigger_type=TriggerType.CRON,
+    cron_expression="0 9 * * *",  # 每天9点
+    initial_variables={"report_type": "daily"},
+)
+scheduler.add_schedule(schedule)
+scheduler.start()
+```
+
+### Webhook触发
+
+```bash
+# 创建Webhook类型的调度任务后，使用curl触发
+curl -X POST http://localhost:8000/api/webhooks/{token} \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: your-secret" \
+  -d '{"key": "value"}'
+```
+
+### 文件监控触发
+
+```python
+schedule = Schedule(
+    id="file-processor",
+    name="新文件处理器",
+    flow_id="process-flow",
+    trigger_type=TriggerType.FILE_WATCH,
+    watch_path="/data/incoming",
+    watch_pattern="*.csv",
+    watch_events=[FileWatchEvent.CREATED],
+    watch_recursive=False,
+)
+```
 
 ## 许可证
 

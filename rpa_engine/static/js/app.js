@@ -828,3 +828,401 @@ async function init() {
 
 // 启动
 document.addEventListener('DOMContentLoaded', init);
+
+// ==================== 调度管理模块 ====================
+
+const SchedulerAPI = {
+    listSchedules(status = null) {
+        const query = status ? `?status=${status}` : '';
+        return API.request('GET', `/api/schedules${query}`);
+    },
+    getSchedule(id) { return API.request('GET', `/api/schedules/${id}`); },
+    createSchedule(data) { return API.request('POST', '/api/schedules', data); },
+    updateSchedule(id, data) { return API.request('PUT', `/api/schedules/${id}`, data); },
+    deleteSchedule(id) { return API.request('DELETE', `/api/schedules/${id}`); },
+    pauseSchedule(id) { return API.request('POST', `/api/schedules/${id}/pause`); },
+    resumeSchedule(id) { return API.request('POST', `/api/schedules/${id}/resume`); },
+    triggerSchedule(id) { return API.request('POST', `/api/schedules/${id}/trigger`, {}); },
+    startScheduler() { return API.request('POST', '/api/scheduler/start'); },
+    stopScheduler() { return API.request('POST', '/api/scheduler/stop'); },
+    getSchedulerStatus() { return API.request('GET', '/api/scheduler/status'); },
+    getHistory(scheduleId = null, limit = 100) {
+        const params = new URLSearchParams();
+        if (scheduleId) params.set('schedule_id', scheduleId);
+        params.set('limit', limit);
+        return API.request('GET', `/api/history?${params}`);
+    },
+    clearHistory(scheduleId = null) {
+        const query = scheduleId ? `?schedule_id=${scheduleId}` : '';
+        return API.request('DELETE', `/api/history${query}`);
+    },
+};
+
+// Tab切换
+function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+
+            // 切换按钮状态
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // 切换内容
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // 加载对应数据
+            if (tab === 'scheduler') loadSchedules();
+            if (tab === 'history') loadHistory();
+        });
+    });
+}
+
+// 调度列表
+async function loadSchedules() {
+    try {
+        const { schedules, total } = await SchedulerAPI.listSchedules();
+        const container = document.getElementById('schedule-list');
+
+        if (total === 0) {
+            container.innerHTML = '<div class="empty-state"><p>暂无调度任务，点击"新建调度"创建</p></div>';
+            return;
+        }
+
+        container.innerHTML = schedules.map(s => `
+            <div class="schedule-card" data-id="${s.id}">
+                <div class="schedule-card-header">
+                    <div>
+                        <h4>${escHtml(s.name)}</h4>
+                        ${s.description ? `<small style="color:var(--text-secondary)">${escHtml(s.description)}</small>` : ''}
+                    </div>
+                    <div class="schedule-card-actions">
+                        <span class="tag-${s.trigger_type} schedule-tag">${getTriggerLabel(s.trigger_type)}</span>
+                        <span class="schedule-status-badge status-${s.status}">${getStatusLabel(s.status)}</span>
+                    </div>
+                </div>
+                <div class="schedule-card-meta">
+                    <span>📄 流程: ${escHtml(s.flow_id)}</span>
+                    ${s.cron_expression ? `<span>⏰ Cron: <code>${escHtml(s.cron_expression)}</code></span>` : ''}
+                    ${s.interval_seconds ? `<span>🔁 间隔: ${s.interval_seconds}秒</span>` : ''}
+                    ${s.trigger_type === 'webhook' ? `<span>🔗 <span class="webhook-url">POST /api/webhooks/${s.webhook_token}</span></span>` : ''}
+                    ${s.last_run_at ? `<span>📅 上次: ${formatTime(s.last_run_at)}</span>` : ''}
+                    ${s.next_run_at ? `<span>⏭ 下次: ${formatTime(s.next_run_at)}</span>` : ''}
+                </div>
+                <div class="schedule-stats">
+                    <span>执行: ${s.run_count}次</span>
+                    <span class="stat-success">✓ 成功: ${s.success_count}</span>
+                    <span class="stat-fail">✗ 失败: ${s.fail_count}</span>
+                </div>
+                <div class="schedule-card-actions" style="margin-top: 10px;">
+                    ${s.status === 'active' ?
+                        `<button class="btn btn-sm btn-secondary" onclick="pauseSchedule('${s.id}')">⏸ 暂停</button>` :
+                        `<button class="btn btn-sm btn-success" onclick="resumeSchedule('${s.id}')">▶ 恢复</button>`
+                    }
+                    <button class="btn btn-sm btn-primary" onclick="triggerSchedule('${s.id}')">▶ 手动执行</button>
+                    <button class="btn btn-sm btn-secondary" onclick="viewScheduleHistory('${s.id}')">📋 历史</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSchedule('${s.id}')">🗑 删除</button>
+                </div>
+            </div>
+        `).join('');
+
+        // 更新历史过滤器
+        updateHistoryFilter(schedules);
+
+    } catch (e) {
+        console.error('加载调度列表失败:', e);
+    }
+}
+
+async function pauseSchedule(id) {
+    try {
+        await SchedulerAPI.pauseSchedule(id);
+        loadSchedules();
+    } catch (e) { alert('暂停失败: ' + e.message); }
+}
+
+async function resumeSchedule(id) {
+    try {
+        await SchedulerAPI.resumeSchedule(id);
+        loadSchedules();
+    } catch (e) { alert('恢复失败: ' + e.message); }
+}
+
+async function triggerSchedule(id) {
+    try {
+        await SchedulerAPI.triggerSchedule(id);
+        alert('任务已触发执行');
+        loadSchedules();
+    } catch (e) { alert('触发失败: ' + e.message); }
+}
+
+async function deleteSchedule(id) {
+    if (!confirm('确定删除此调度任务？')) return;
+    try {
+        await SchedulerAPI.deleteSchedule(id);
+        loadSchedules();
+    } catch (e) { alert('删除失败: ' + e.message); }
+}
+
+function viewScheduleHistory(scheduleId) {
+    // 切换到历史tab并过滤
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-tab="history"]').classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-history').classList.add('active');
+
+    const filter = document.getElementById('history-filter');
+    filter.value = scheduleId;
+    loadHistory();
+}
+
+// 新建调度弹窗
+function showScheduleModal() {
+    document.getElementById('schedule-modal-overlay').classList.remove('hidden');
+    document.getElementById('schedule-modal-title').textContent = '新建调度任务';
+
+    // 加载流程列表到下拉框
+    loadFlowsForSchedule();
+
+    // 重置表单
+    document.getElementById('schedule-form').reset();
+    document.getElementById('sched-max-retries').value = '0';
+    document.getElementById('sched-retry-delay').value = '60';
+    document.getElementById('sched-timeout').value = '3600';
+    showTriggerConfig('cron');
+}
+
+function hideScheduleModal() {
+    document.getElementById('schedule-modal-overlay').classList.add('hidden');
+}
+
+async function loadFlowsForSchedule() {
+    try {
+        const { flows } = await API.getFlows();
+        const select = document.getElementById('sched-flow-id');
+        select.innerHTML = '<option value="">选择流程...</option>' +
+            flows.map(f => `<option value="${f.id}">${escHtml(f.name)} (${f.node_count}节点)</option>`).join('');
+
+        // 也更新历史过滤器
+        const filter = document.getElementById('history-filter');
+        filter.innerHTML = '<option value="">全部任务</option>' +
+            flows.map(f => `<option value="${f.id}">${escHtml(f.name)}</option>`).join('');
+    } catch (e) {
+        console.error('加载流程列表失败:', e);
+    }
+}
+
+function showTriggerConfig(type) {
+    document.querySelectorAll('.trigger-config').forEach(el => el.classList.add('hidden'));
+    const config = document.getElementById(`trigger-config-${type}`);
+    if (config) config.classList.remove('hidden');
+}
+
+async function submitSchedule(e) {
+    e.preventDefault();
+
+    const triggerType = document.getElementById('sched-trigger-type').value;
+    const data = {
+        name: document.getElementById('sched-name').value,
+        description: document.getElementById('sched-description').value || null,
+        flow_id: document.getElementById('sched-flow-id').value,
+        trigger_type: triggerType,
+        max_retries: parseInt(document.getElementById('sched-max-retries').value) || 0,
+        retry_delay_seconds: parseInt(document.getElementById('sched-retry-delay').value) || 60,
+        timeout: parseInt(document.getElementById('sched-timeout').value) || 3600,
+    };
+
+    // 解析初始变量
+    const varsStr = document.getElementById('sched-variables').value.trim();
+    if (varsStr) {
+        try { data.initial_variables = JSON.parse(varsStr); }
+        catch { alert('初始变量JSON格式错误'); return; }
+    } else {
+        data.initial_variables = {};
+    }
+
+    // 根据触发类型填充配置
+    if (triggerType === 'cron') {
+        data.cron_expression = document.getElementById('sched-cron').value;
+        if (!data.cron_expression) { alert('请输入Cron表达式'); return; }
+    } else if (triggerType === 'interval') {
+        data.interval_seconds = parseInt(document.getElementById('sched-interval').value);
+        if (!data.interval_seconds || data.interval_seconds <= 0) { alert('请输入有效的间隔秒数'); return; }
+    } else if (triggerType === 'once') {
+        const runAt = document.getElementById('sched-run-at').value;
+        if (!runAt) { alert('请选择执行时间'); return; }
+        data.run_at = new Date(runAt).toISOString();
+    } else if (triggerType === 'webhook') {
+        data.webhook_secret = document.getElementById('sched-webhook-secret').value || null;
+    } else if (triggerType === 'file_watch') {
+        data.watch_path = document.getElementById('sched-watch-path').value;
+        if (!data.watch_path) { alert('请输入监控路径'); return; }
+        data.watch_pattern = document.getElementById('sched-watch-pattern').value || '*';
+        data.watch_recursive = document.getElementById('sched-watch-recursive').checked;
+        const eventsSelect = document.getElementById('sched-watch-events');
+        data.watch_events = Array.from(eventsSelect.selectedOptions).map(o => o.value);
+        if (data.watch_events.length === 0) data.watch_events = ['created'];
+    }
+
+    try {
+        await SchedulerAPI.createSchedule(data);
+        hideScheduleModal();
+        loadSchedules();
+    } catch (e) {
+        alert('创建失败: ' + e.message);
+    }
+}
+
+// 执行历史
+async function loadHistory() {
+    try {
+        const filter = document.getElementById('history-filter').value;
+        const { history, total } = await SchedulerAPI.getHistory(filter || null, 100);
+        const container = document.getElementById('history-list');
+
+        if (total === 0) {
+            container.innerHTML = '<div class="empty-state"><p>暂无执行记录</p></div>';
+            return;
+        }
+
+        container.innerHTML = history.reverse().map(h => `
+            <div class="history-card">
+                <div class="history-card-header">
+                    <h4>任务: ${escHtml(h.schedule_id)}</h4>
+                    <span class="schedule-tag tag-${h.trigger_type}">${getTriggerLabel(h.trigger_type)}</span>
+                </div>
+                <div class="history-card-detail">
+                    <span>状态: <span class="status-badge ${h.status}">${h.status}</span></span>
+                    <span>开始: ${formatTime(h.started_at)}</span>
+                    ${h.completed_at ? `<span>完成: ${formatTime(h.completed_at)}</span>` : ''}
+                    ${h.duration_ms !== null ? `<span>耗时: ${h.duration_ms}ms</span>` : ''}
+                    ${h.retry_count > 0 ? `<span>重试: ${h.retry_count}次</span>` : ''}
+                    ${h.trigger_info ? `<span>触发: ${escHtml(h.trigger_info)}</span>` : ''}
+                </div>
+                ${h.error ? `<div class="history-error">❌ ${escHtml(h.error)}</div>` : ''}
+            </div>
+        `).join('');
+
+    } catch (e) {
+        console.error('加载历史失败:', e);
+    }
+}
+
+function updateHistoryFilter(schedules) {
+    // 仅更新调度任务下拉（流程下拉在loadFlowsForSchedule中处理）
+}
+
+async function refreshSchedulerStatus() {
+    try {
+        const status = await SchedulerAPI.getSchedulerStatus();
+        const statusEl = document.getElementById('scheduler-status');
+        const infoEl = document.getElementById('scheduler-info');
+        const startBtn = document.getElementById('btn-start-scheduler');
+        const stopBtn = document.getElementById('btn-stop-scheduler');
+
+        if (status.is_running) {
+            statusEl.textContent = '● 运行中';
+            statusEl.classList.add('running');
+            infoEl.textContent = `调度器: 运行中 | 任务: ${status.active}/${status.total_schedules}`;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+        } else {
+            statusEl.textContent = '● 未启动';
+            statusEl.classList.remove('running');
+            infoEl.textContent = '调度器: 未启动';
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+        }
+    } catch (e) {
+        console.error('获取调度器状态失败:', e);
+    }
+}
+
+// 工具函数
+function getTriggerLabel(type) {
+    const labels = {
+        cron: '⏰ Cron', interval: '🔁 间隔', once: '🔂 单次',
+        webhook: '🔗 Webhook', file_watch: '📁 文件监控', manual: '🖱 手动'
+    };
+    return labels[type] || type;
+}
+
+function getStatusLabel(status) {
+    const labels = { active: '运行中', paused: '已暂停', completed: '已完成', failed: '失败' };
+    return labels[status] || status;
+}
+
+function formatTime(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        const d = new Date(isoStr);
+        return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch { return isoStr; }
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// 调度管理事件绑定
+function initSchedulerEvents() {
+    // Tab切换
+    initTabs();
+
+    // 新建调度
+    document.getElementById('btn-add-schedule').addEventListener('click', showScheduleModal);
+    document.getElementById('btn-schedule-modal-close').addEventListener('click', hideScheduleModal);
+    document.getElementById('btn-schedule-cancel').addEventListener('click', hideScheduleModal);
+    document.getElementById('schedule-form').addEventListener('submit', submitSchedule);
+
+    // 触发类型切换
+    document.getElementById('sched-trigger-type').addEventListener('change', (e) => {
+        showTriggerConfig(e.target.value);
+    });
+
+    // Cron预设
+    document.getElementById('cron-presets').addEventListener('change', (e) => {
+        if (e.target.value) document.getElementById('sched-cron').value = e.target.value;
+    });
+
+    // 调度器控制
+    document.getElementById('btn-start-scheduler').addEventListener('click', async () => {
+        try {
+            await SchedulerAPI.startScheduler();
+            refreshSchedulerStatus();
+        } catch (e) { alert('启动失败: ' + e.message); }
+    });
+
+    document.getElementById('btn-stop-scheduler').addEventListener('click', async () => {
+        try {
+            await SchedulerAPI.stopScheduler();
+            refreshSchedulerStatus();
+        } catch (e) { alert('停止失败: ' + e.message); }
+    });
+
+    // 历史
+    document.getElementById('btn-refresh-history').addEventListener('click', loadHistory);
+    document.getElementById('btn-clear-history').addEventListener('click', async () => {
+        if (!confirm('确定清空所有执行历史？')) return;
+        await SchedulerAPI.clearHistory();
+        loadHistory();
+    });
+    document.getElementById('history-filter').addEventListener('change', loadHistory);
+
+    // 定期刷新调度器状态
+    refreshSchedulerStatus();
+    setInterval(refreshSchedulerStatus, 30000);
+}
+
+// 修改init函数以包含调度器初始化
+const _originalInit = typeof init === 'function' ? init : null;
+
+// 拦截init，在原始init之后追加调度器事件绑定
+document.addEventListener('DOMContentLoaded', () => {
+    // 延迟执行以确保原有初始化完成
+    setTimeout(() => {
+        initSchedulerEvents();
+    }, 100);
+});

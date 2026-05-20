@@ -557,15 +557,64 @@ print(f"状态: {result.status}")
 
 ---
 
-## 10. 后续扩展方向
+## 10. Phase 6: 调度系统 ✅ 已完成
 
-1. **更多节点类型**: Web操作、数据库操作、邮件发送、Excel处理
-2. **调度系统**: 定时执行、触发器执行
-3. **录制回放**: 录制用户操作自动生成流程
-4. **AI增强**: 自然语言描述转流程、智能异常处理
-5. **前端设计器**: 可视化流程编排界面
-6. **权限管理**: 用户认证、流程权限控制
-7. **监控告警**: 执行监控、失败告警
+### 10.1 调度触发器类型
+
+| 触发器 | 说明 | 配置参数 |
+|--------|------|----------|
+| `cron` | Cron表达式定时 | `cron_expression` (分 时 日 月 周) |
+| `interval` | 固定间隔执行 | `interval_seconds` |
+| `once` | 单次定时执行 | `run_at` (ISO时间) |
+| `webhook` | HTTP请求触发 | `webhook_token`, `webhook_secret` |
+| `file_watch` | 文件变化触发 | `watch_path`, `watch_pattern`, `watch_events` |
+| `manual` | 手动触发 | 无 |
+
+### 10.2 调度器核心功能
+
+- **Cron表达式解析**: 支持通配符、步长、范围、列表等语法
+- **重试机制**: 可配置最大重试次数和重试间隔
+- **执行历史**: 记录每次执行的状态、耗时、错误信息
+- **Webhook安全**: 支持令牌认证和密钥验证
+- **文件监控**: 基于轮询的文件变化检测，支持递归监控
+
+### 10.3 新增API端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/schedules` | 创建调度任务 |
+| GET | `/api/schedules` | 获取调度列表 |
+| GET | `/api/schedules/{id}` | 获取调度详情 |
+| PUT | `/api/schedules/{id}` | 更新调度任务 |
+| DELETE | `/api/schedules/{id}` | 删除调度任务 |
+| POST | `/api/schedules/{id}/pause` | 暂停调度 |
+| POST | `/api/schedules/{id}/resume` | 恢复调度 |
+| POST | `/api/schedules/{id}/trigger` | 手动触发 |
+| POST | `/api/webhooks/{token}` | Webhook触发 |
+| GET | `/api/history` | 执行历史 |
+| GET | `/api/scheduler/status` | 调度器状态 |
+| POST | `/api/scheduler/start` | 启动调度器 |
+| POST | `/api/scheduler/stop` | 停止调度器 |
+
+### 10.4 前端调度管理
+
+- 调度任务列表（卡片式展示）
+- 新建调度弹窗（支持所有触发器类型配置）
+- Cron表达式常用预设（每分钟、每小时、每天等）
+- 调度任务操作（暂停、恢复、手动执行、删除）
+- 执行历史查看（支持按任务过滤）
+- 调度器启停控制
+
+---
+
+## 11. 后续扩展方向
+
+1. **录制回放**: 录制用户操作自动生成流程
+2. **AI增强**: 自然语言描述转流程、智能异常处理
+3. **权限管理**: 用户认证、流程权限控制
+4. **监控告警**: 执行监控、失败告警通知（邮件/钉钉/企微）
+5. **集群调度**: 多节点分布式调度
+6. **流程市场**: 社区共享流程模板
 
 ---
 
@@ -577,15 +626,45 @@ rpa-automation-tool/
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── engine.py
-│   ├── models/
-│   ├── nodes/
-│   ├── api/
+│   ├── models/              # 数据模型
+│   │   ├── schemas.py       # 流程、节点、调度等模型
+│   │   └── context.py       # 执行上下文
+│   ├── nodes/               # 节点实现 (43个)
+│   │   ├── python_nodes.py
+│   │   ├── file_nodes.py
+│   │   ├── system_nodes.py
+│   │   ├── logic_nodes.py
+│   │   ├── sftp_nodes.py
+│   │   ├── ftp_nodes.py
+│   │   ├── xml_nodes.py
+│   │   ├── math_nodes.py
+│   │   ├── database_nodes.py
+│   │   ├── excel_nodes.py
+│   │   ├── web_nodes.py
+│   │   ├── delay_nodes.py
+│   │   └── phase5_nodes.py
+│   ├── scheduler/           # 调度系统
+│   │   ├── scheduler.py     # 调度引擎 (Cron、间隔、单次)
+│   │   └── events.py        # 事件管理 (文件监控)
+│   ├── api/                 # REST API
+│   │   └── server.py        # FastAPI服务 (含调度API)
+│   ├── static/              # 前端静态文件
+│   │   ├── index.html       # 流程设计器+调度管理
+│   │   ├── css/style.css
+│   │   └── js/app.js
 │   └── utils/
-├── tests/
+├── tests/                   # 199个测试
+│   ├── test_core_engine.py
+│   ├── test_phase2_nodes.py
+│   ├── test_phase3_nodes.py
+│   ├── test_phase4_nodes.py
+│   ├── test_phase5_nodes.py
+│   └── test_phase6_scheduler.py
 ├── examples/
 ├── pyproject.toml
 ├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
 ├── .gitignore
-├── README.md
-└── MVP.md
+└── README.md
 ```

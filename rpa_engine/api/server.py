@@ -1,14 +1,15 @@
 """
 RPA自动化工具 - FastAPI后端服务
 
-提供REST API接口用于流程管理和执行
+提供REST API接口用于流程管理、执行和调度
 """
 
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -16,11 +17,19 @@ from pydantic import BaseModel
 
 from ..engine import ExecutionEngine
 from ..models.schemas import (
+    ExecutionHistory,
     FlowExecuteRequest,
     FlowSaveRequest,
     NodeDefinition,
+    Schedule,
+    ScheduleCreateRequest,
+    ScheduleStatus,
+    ScheduleUpdateRequest,
+    TriggerType,
 )
 from ..nodes import get_all_node_definitions
+from ..scheduler.scheduler import FlowScheduler
+from ..scheduler.events import EventManager
 from ..utils import (
     create_sample_flow,
     generate_flow_id,
@@ -32,8 +41,8 @@ from ..utils import (
 # 创建FastAPI应用
 app = FastAPI(
     title="RPA自动化工具 API",
-    description="轻量级RPA流程设计器和执行引擎",
-    version="0.1.0"
+    description="轻量级RPA流程设计器和执行引擎，支持定时调度和事件触发",
+    version="0.2.0"
 )
 
 # 配置CORS
@@ -56,6 +65,29 @@ FLOWS_DIR.mkdir(exist_ok=True)
 STATIC_DIR = Path(__file__).parent.parent / "static"
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+# ============= 调度系统初始化 =============
+
+def _flow_executor(flow_id: str, variables: Dict[str, Any] = None):
+    """流程执行器函数，供调度器调用"""
+    flow_file = FLOWS_DIR / f"{flow_id}.json"
+    if not flow_file.exists():
+        raise FileNotFoundError(f"流程不存在: {flow_id}")
+    flow = load_flow_from_file(str(flow_file))
+    return engine.execute_flow(flow=flow, initial_variables=variables or {})
+
+
+scheduler = FlowScheduler(flow_executor=_flow_executor)
+event_manager = EventManager(scheduler=scheduler)
+
+# 注册调度器事件回调
+def _on_schedule_added(schedule: Schedule):
+    """调度任务添加时，如果是文件监控类型则启动监控"""
+    if schedule.trigger_type == TriggerType.FILE_WATCH and schedule.status == ScheduleStatus.ACTIVE:
+        event_manager.start_file_watch(schedule)
+
+scheduler.on("schedule_added", _on_schedule_added)
 
 
 # 前端页面
@@ -86,7 +118,12 @@ class FlowListResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     """健康检查"""
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "ok",
+        "version": "0.2.0",
+        "timestamp": datetime.now().isoformat(),
+        "scheduler_running": scheduler.is_running(),
+    }
 
 
 # 获取节点类型列表
@@ -124,16 +161,13 @@ async def create_flow(request: FlowSaveRequest):
     """创建新流程"""
     flow = request.flow
 
-    # 生成ID（如果没有）
     if not flow.id:
         flow.id = generate_flow_id()
 
-    # 验证流程
     errors = validate_flow(flow)
     if errors:
         raise HTTPException(status_code=400, detail=f"流程验证失败: {', '.join(errors)}")
 
-    # 保存流程
     flow_file = FLOWS_DIR / f"{flow.id}.json"
     if flow_file.exists() and not request.overwrite:
         raise HTTPException(status_code=409, detail=f"流程已存在: {flow.id}")
@@ -145,6 +179,13 @@ async def create_flow(request: FlowSaveRequest):
         message=f"流程创建成功: {flow.id}",
         data={"flow_id": flow.id}
     )
+
+
+@app.get("/api/flows/sample")
+async def get_sample_flow():
+    """获取示例流程"""
+    flow = create_sample_flow()
+    return flow.model_dump()
 
 
 @app.get("/api/flows/{flow_id}")
@@ -164,12 +205,10 @@ async def update_flow(flow_id: str, request: FlowSaveRequest):
     flow = request.flow
     flow.id = flow_id
 
-    # 验证流程
     errors = validate_flow(flow)
     if errors:
         raise HTTPException(status_code=400, detail=f"流程验证失败: {', '.join(errors)}")
 
-    # 保存流程
     flow_file = FLOWS_DIR / f"{flow_id}.json"
     save_flow_to_file(flow, str(flow_file))
 
@@ -203,15 +242,12 @@ async def execute_flow(flow_id: str, request: FlowExecuteRequest):
     if not flow_file.exists():
         raise HTTPException(status_code=404, detail=f"流程不存在: {flow_id}")
 
-    # 加载流程
     flow = load_flow_from_file(str(flow_file))
 
-    # 验证流程
     errors = validate_flow(flow)
     if errors:
         raise HTTPException(status_code=400, detail=f"流程验证失败: {', '.join(errors)}")
 
-    # 执行流程
     try:
         result = engine.execute_flow(
             flow=flow,
@@ -230,12 +266,212 @@ async def execute_flow(flow_id: str, request: FlowExecuteRequest):
         raise HTTPException(status_code=500, detail=f"流程执行失败: {str(e)}")
 
 
-# 获取示例流程
-@app.get("/api/flows/sample")
-async def get_sample_flow():
-    """获取示例流程"""
-    flow = create_sample_flow()
-    return flow.model_dump()
+# ============= 调度管理API =============
+
+@app.post("/api/schedules", response_model=ApiResponse)
+async def create_schedule(request: ScheduleCreateRequest):
+    """创建调度任务"""
+    schedule = Schedule(
+        id=str(uuid.uuid4()),
+        name=request.name,
+        description=request.description,
+        flow_id=request.flow_id,
+        trigger_type=request.trigger_type,
+        cron_expression=request.cron_expression,
+        timezone=request.timezone,
+        interval_seconds=request.interval_seconds,
+        run_at=request.run_at,
+        webhook_token=request.webhook_token or str(uuid.uuid4()),
+        webhook_secret=request.webhook_secret,
+        watch_path=request.watch_path,
+        watch_events=request.watch_events,
+        watch_pattern=request.watch_pattern,
+        watch_recursive=request.watch_recursive,
+        initial_variables=request.initial_variables,
+        max_retries=request.max_retries,
+        retry_delay_seconds=request.retry_delay_seconds,
+        timeout=request.timeout,
+    )
+
+    # 验证流程是否存在
+    flow_file = FLOWS_DIR / f"{request.flow_id}.json"
+    if not flow_file.exists():
+        raise HTTPException(status_code=404, detail=f"关联流程不存在: {request.flow_id}")
+
+    try:
+        scheduler.add_schedule(schedule)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return ApiResponse(
+        success=True,
+        message=f"调度任务创建成功: {schedule.id}",
+        data={
+            "schedule_id": schedule.id,
+            "webhook_url": f"/api/webhooks/{schedule.webhook_token}" if schedule.trigger_type == TriggerType.WEBHOOK else None,
+        }
+    )
+
+
+@app.get("/api/schedules")
+async def list_schedules(status: Optional[str] = None):
+    """获取调度任务列表"""
+    status_filter = ScheduleStatus(status) if status else None
+    schedules = scheduler.list_schedules(status_filter)
+    return {
+        "schedules": [s.model_dump() for s in schedules],
+        "total": len(schedules),
+    }
+
+
+@app.get("/api/schedules/{schedule_id}")
+async def get_schedule(schedule_id: str):
+    """获取调度任务详情"""
+    schedule = scheduler.get_schedule(schedule_id)
+    if not schedule:
+        raise HTTPException(status_code=404, detail=f"调度任务不存在: {schedule_id}")
+    return schedule.model_dump()
+
+
+@app.put("/api/schedules/{schedule_id}", response_model=ApiResponse)
+async def update_schedule(schedule_id: str, request: ScheduleUpdateRequest):
+    """更新调度任务"""
+    try:
+        updates = request.model_dump(exclude_none=True)
+        schedule = scheduler.update_schedule(schedule_id, updates)
+        return ApiResponse(
+            success=True,
+            message=f"调度任务更新成功: {schedule_id}",
+            data=schedule.model_dump()
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/api/schedules/{schedule_id}", response_model=ApiResponse)
+async def delete_schedule(schedule_id: str):
+    """删除调度任务"""
+    event_manager.stop_file_watch(schedule_id)
+    if scheduler.remove_schedule(schedule_id):
+        return ApiResponse(success=True, message=f"调度任务删除成功: {schedule_id}")
+    raise HTTPException(status_code=404, detail=f"调度任务不存在: {schedule_id}")
+
+
+@app.post("/api/schedules/{schedule_id}/pause", response_model=ApiResponse)
+async def pause_schedule(schedule_id: str):
+    """暂停调度任务"""
+    try:
+        schedule = scheduler.pause_schedule(schedule_id)
+        event_manager.stop_file_watch(schedule_id)
+        return ApiResponse(success=True, message=f"调度任务已暂停: {schedule_id}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/schedules/{schedule_id}/resume", response_model=ApiResponse)
+async def resume_schedule(schedule_id: str):
+    """恢复调度任务"""
+    try:
+        schedule = scheduler.resume_schedule(schedule_id)
+        if schedule.trigger_type == TriggerType.FILE_WATCH:
+            event_manager.start_file_watch(schedule)
+        return ApiResponse(success=True, message=f"调度任务已恢复: {schedule_id}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/schedules/{schedule_id}/trigger", response_model=ApiResponse)
+async def trigger_schedule(schedule_id: str, variables: Dict[str, Any] = None):
+    """手动触发调度任务"""
+    try:
+        history = scheduler.trigger_schedule(schedule_id, variables)
+        return ApiResponse(
+            success=True,
+            message="调度任务已触发",
+            data=history.model_dump()
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ============= Webhook API =============
+
+@app.post("/api/webhooks/{token}")
+async def webhook_trigger(token: str, request: Request):
+    """Webhook触发端点"""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    # 从header获取密钥
+    secret = request.headers.get("X-Webhook-Secret")
+
+    try:
+        history = scheduler.trigger_webhook(token, payload, secret)
+        return {
+            "success": True,
+            "message": "Webhook触发成功",
+            "execution_id": history.id,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ============= 执行历史API =============
+
+@app.get("/api/history")
+async def get_execution_history(schedule_id: Optional[str] = None, limit: int = 100):
+    """获取执行历史"""
+    history = scheduler.get_history(schedule_id, limit)
+    return {
+        "history": [h.model_dump() for h in history],
+        "total": len(history),
+    }
+
+
+@app.delete("/api/history", response_model=ApiResponse)
+async def clear_execution_history(schedule_id: Optional[str] = None):
+    """清空执行历史"""
+    scheduler.clear_history(schedule_id)
+    return ApiResponse(success=True, message="执行历史已清空")
+
+
+# ============= 调度器状态API =============
+
+@app.get("/api/scheduler/status")
+async def get_scheduler_status():
+    """获取调度器状态"""
+    return scheduler.get_statistics()
+
+
+@app.post("/api/scheduler/start", response_model=ApiResponse)
+async def start_scheduler():
+    """启动调度器"""
+    scheduler.start()
+    return ApiResponse(success=True, message="调度器已启动")
+
+
+@app.post("/api/scheduler/stop", response_model=ApiResponse)
+async def stop_scheduler():
+    """停止调度器"""
+    scheduler.stop()
+    event_manager.stop_all()
+    return ApiResponse(success=True, message="调度器已停止")
+
+
+# ============= 文件监控API =============
+
+@app.get("/api/watchers")
+async def list_watchers():
+    """获取活跃的文件监控器列表"""
+    return event_manager.get_active_watchers()
+
+
+@app.get("/api/events")
+async def get_event_log(limit: int = 100):
+    """获取事件日志"""
+    return event_manager.get_event_log(limit)
 
 
 # 获取执行引擎状态
@@ -244,16 +480,22 @@ async def get_engine_status():
     """获取执行引擎状态"""
     return {
         "status": "running",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "flows_dir": str(FLOWS_DIR.absolute()),
-        "flow_count": len(list(FLOWS_DIR.glob("*.json")))
+        "flow_count": len(list(FLOWS_DIR.glob("*.json"))),
+        "scheduler_running": scheduler.is_running(),
     }
 
 
 # 启动服务器的函数
-def start_server(host: str = "0.0.0.0", port: int = 8000):
+def start_server(host: str = "0.0.0.0", port: int = 8000, enable_scheduler: bool = True):
     """启动API服务器"""
     import uvicorn
+
+    if enable_scheduler:
+        scheduler.start(check_interval=10.0)
+        print("[调度器] 已启动")
+
     uvicorn.run(app, host=host, port=port)
 
 

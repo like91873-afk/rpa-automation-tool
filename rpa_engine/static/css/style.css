@@ -700,3 +700,341 @@ body {
     z-index: 1000;
     opacity: 0.8;
 }
+
+/* ============= 调度管理面板 ============= */
+
+.scheduler-panel,
+.history-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: auto;
+}
+
+.scheduler-header,
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.scheduler-header h2,
+.history-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.4em;
+}
+
+.scheduler-controls,
+.history-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.scheduler-status {
+    font-size: 0.9em;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+}
+
+.scheduler-status.running {
+    color: var(--success);
+}
+
+.schedule-list,
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.schedule-card,
+.history-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+
+.schedule-card:hover {
+    border-color: var(--primary);
+}
+
+.schedule-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.schedule-card-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.1em;
+}
+
+.schedule-card-meta {
+    display: flex;
+    gap: 15px;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    flex-wrap: wrap;
+}
+
+.schedule-card-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.schedule-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.schedule-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tag-cron { background: #3b82f633; color: #60a5fa; }
+.tag-interval { background: #8b5cf633; color: #a78bfa; }
+.tag-once { background: #f59e0b33; color: #fbbf24; }
+.tag-webhook { background: #10b98133; color: #34d399; }
+.tag-file_watch { background: #ec489933; color: #f472b6; }
+.tag-manual { background: #6b728033; color: #9ca3af; }
+
+.schedule-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+.status-active { background: #10b98133; color: #34d399; }
+.status-paused { background: #f59e0b33; color: #fbbf24; }
+.status-completed { background: #3b82f633; color: #60a5fa; }
+.status-failed { background: #ef444433; color: #f87171; }
+
+.webhook-url {
+    font-family: monospace;
+    font-size: 0.8em;
+    background: var(--bg-dark);
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--success);
+    word-break: break-all;
+}
+
+/* 执行历史 */
+.history-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-card-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.history-card-detail {
+    display: flex;
+    gap: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.history-card-detail .status-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.history-card-detail .status-badge.completed { background: #10b98133; color: #34d399; }
+.history-card-detail .status-badge.failed { background: #ef444433; color: #f87171; }
+.history-card-detail .status-badge.running { background: #3b82f633; color: #60a5fa; }
+
+.history-error {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #ef444422;
+    border-radius: 4px;
+    color: #f87171;
+    font-size: 0.85em;
+}
+
+/* Tab切换 */
+.navbar-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tab-content {
+    display: none !important;
+}
+
+.tab-content.active {
+    display: flex !important;
+}
+
+/* 弹窗加大 */
+.modal-lg {
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* 表单 */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.form-group label .required {
+    color: var(--danger);
+}
+
+.form-input {
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 0.9em;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.form-help {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.trigger-config {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-dark);
+    border-radius: 8px;
+}
+
+.trigger-config h4 {
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    font-size: 0.95em;
+}
+
+.select-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-primary);
+    font-size: 0.85em;
+}
+
+.schedule-stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 8px;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+}
+
+.schedule-stats span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-success { color: var(--success); }
+.stat-fail { color: var(--danger); }
+
+/* 按钮补充 */
+.btn-success {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+
+.btn-success:hover {
+    opacity: 0.9;
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 0.8em;
+    border-radius: 4px;
+}
+
+.hidden {
+    display: none !important;
+}

@@ -14,6 +14,11 @@
                 <span class="logo">⚡</span>
                 <h1>RPA 流程设计器</h1>
             </div>
+            <div class="navbar-tabs">
+                <button class="tab-btn active" data-tab="designer">🎨 流程设计</button>
+                <button class="tab-btn" data-tab="scheduler">⏰ 调度管理</button>
+                <button class="tab-btn" data-tab="history">📋 执行历史</button>
+            </div>
             <div class="navbar-actions">
                 <button id="btn-new-flow" class="btn btn-secondary" title="新建流程">📄 新建</button>
                 <button id="btn-save-flow" class="btn btn-secondary" title="保存流程">💾 保存</button>
@@ -22,7 +27,8 @@
             </div>
         </header>
 
-        <div class="main-layout">
+        <!-- 流程设计器面板 -->
+        <div class="main-layout tab-content active" id="tab-designer">
             <!-- 左侧节点面板 -->
             <aside class="node-panel" id="node-panel">
                 <div class="panel-header">
@@ -63,11 +69,49 @@
             </aside>
         </div>
 
+        <!-- 调度管理面板 -->
+        <div class="tab-content scheduler-panel" id="tab-scheduler">
+            <div class="scheduler-header">
+                <h2>⏰ 调度任务管理</h2>
+                <div class="scheduler-controls">
+                    <span class="scheduler-status" id="scheduler-status">● 未启动</span>
+                    <button id="btn-start-scheduler" class="btn btn-primary">▶ 启动调度器</button>
+                    <button id="btn-stop-scheduler" class="btn btn-danger hidden">⏹ 停止调度器</button>
+                    <button id="btn-add-schedule" class="btn btn-success">+ 新建调度</button>
+                </div>
+            </div>
+            <div class="schedule-list" id="schedule-list">
+                <div class="empty-state">
+                    <p>暂无调度任务，点击"新建调度"创建</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 执行历史面板 -->
+        <div class="tab-content history-panel" id="tab-history">
+            <div class="history-header">
+                <h2>📋 执行历史</h2>
+                <div class="history-controls">
+                    <select id="history-filter" class="select-input">
+                        <option value="">全部任务</option>
+                    </select>
+                    <button id="btn-refresh-history" class="btn btn-secondary">🔄 刷新</button>
+                    <button id="btn-clear-history" class="btn btn-danger">🗑 清空</button>
+                </div>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="empty-state">
+                    <p>暂无执行记录</p>
+                </div>
+            </div>
+        </div>
+
         <!-- 底部状态栏 -->
         <footer class="status-bar">
             <span id="status-text">就绪</span>
             <span id="node-count">节点: 0</span>
             <span id="connection-count">连接: 0</span>
+            <span id="scheduler-info">调度器: 未启动</span>
         </footer>
 
         <!-- 执行结果弹窗 -->
@@ -98,6 +142,165 @@
                     </div>
                     <div id="server-flows-list" class="server-flows-list hidden"></div>
                     <input type="file" id="file-input" accept=".json" class="hidden">
+                </div>
+            </div>
+        </div>
+
+        <!-- 调度任务编辑弹窗 -->
+        <div id="schedule-modal-overlay" class="modal-overlay hidden">
+            <div class="modal modal-lg">
+                <div class="modal-header">
+                    <h3 id="schedule-modal-title">新建调度任务</h3>
+                    <button class="btn-close" id="btn-schedule-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="schedule-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>任务名称 <span class="required">*</span></label>
+                                <input type="text" id="sched-name" class="form-input" required placeholder="例: 每日报表生成">
+                            </div>
+                            <div class="form-group">
+                                <label>关联流程 <span class="required">*</span></label>
+                                <select id="sched-flow-id" class="form-input" required>
+                                    <option value="">选择流程...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>触发方式 <span class="required">*</span></label>
+                                <select id="sched-trigger-type" class="form-input" required>
+                                    <option value="cron">⏰ Cron定时</option>
+                                    <option value="interval">🔁 固定间隔</option>
+                                    <option value="once">🔂 单次执行</option>
+                                    <option value="webhook">🔗 Webhook</option>
+                                    <option value="file_watch">📁 文件监控</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>描述</label>
+                                <input type="text" id="sched-description" class="form-input" placeholder="任务描述(可选)">
+                            </div>
+                        </div>
+
+                        <!-- Cron配置 -->
+                        <div id="trigger-config-cron" class="trigger-config">
+                            <h4>⏰ Cron定时配置</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Cron表达式 <span class="required">*</span></label>
+                                    <input type="text" id="sched-cron" class="form-input" placeholder="*/5 * * * *">
+                                    <small class="form-help">格式: 分 时 日 月 周 (例: 0 9 * * 1-5 = 工作日每天9点)</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>常用表达式</label>
+                                    <select id="cron-presets" class="form-input">
+                                        <option value="">自定义</option>
+                                        <option value="* * * * *">每分钟</option>
+                                        <option value="*/5 * * * *">每5分钟</option>
+                                        <option value="*/15 * * * *">每15分钟</option>
+                                        <option value="0 * * * *">每小时</option>
+                                        <option value="0 9 * * *">每天9:00</option>
+                                        <option value="0 9 * * 1-5">工作日9:00</option>
+                                        <option value="0 0 * * *">每天午夜</option>
+                                        <option value="0 0 1 * *">每月1号</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 间隔配置 -->
+                        <div id="trigger-config-interval" class="trigger-config hidden">
+                            <h4>🔁 固定间隔配置</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>间隔秒数 <span class="required">*</span></label>
+                                    <input type="number" id="sched-interval" class="form-input" min="1" value="60">
+                                    <small class="form-help">每次执行之间的间隔（秒）</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 单次执行配置 -->
+                        <div id="trigger-config-once" class="trigger-config hidden">
+                            <h4>🔂 单次执行配置</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>执行时间 <span class="required">*</span></label>
+                                    <input type="datetime-local" id="sched-run-at" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Webhook配置 -->
+                        <div id="trigger-config-webhook" class="trigger-config hidden">
+                            <h4>🔗 Webhook配置</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Webhook令牌</label>
+                                    <input type="text" id="sched-webhook-token" class="form-input" placeholder="自动生成" readonly>
+                                    <small class="form-help">保存后自动生成Webhook URL</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>验证密钥</label>
+                                    <input type="text" id="sched-webhook-secret" class="form-input" placeholder="可选，用于验证请求来源">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件监控配置 -->
+                        <div id="trigger-config-file_watch" class="trigger-config hidden">
+                            <h4>📁 文件监控配置</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>监控路径 <span class="required">*</span></label>
+                                    <input type="text" id="sched-watch-path" class="form-input" placeholder="/path/to/watch">
+                                </div>
+                                <div class="form-group">
+                                    <label>文件模式</label>
+                                    <input type="text" id="sched-watch-pattern" class="form-input" value="*.txt" placeholder="*.txt, data_*.csv">
+                                </div>
+                                <div class="form-group">
+                                    <label>监控事件</label>
+                                    <select id="sched-watch-events" class="form-input" multiple>
+                                        <option value="created" selected>文件创建</option>
+                                        <option value="modified">文件修改</option>
+                                        <option value="deleted">文件删除</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="sched-watch-recursive"> 递归监控子目录
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 通用配置 -->
+                        <h4>⚙ 通用配置</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>最大重试次数</label>
+                                <input type="number" id="sched-max-retries" class="form-input" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>重试间隔(秒)</label>
+                                <input type="number" id="sched-retry-delay" class="form-input" min="0" value="60">
+                            </div>
+                            <div class="form-group">
+                                <label>执行超时(秒)</label>
+                                <input type="number" id="sched-timeout" class="form-input" min="1" value="3600">
+                            </div>
+                            <div class="form-group">
+                                <label>初始变量(JSON)</label>
+                                <input type="text" id="sched-variables" class="form-input" placeholder='{"key": "value"}'>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="btn-schedule-cancel" class="btn btn-secondary">取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
