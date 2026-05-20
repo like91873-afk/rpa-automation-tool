@@ -50,6 +50,24 @@
 #### 数据处理
 - **XML保存** (`xml_save`) - 将数据保存为XML文件，支持多种编码和存在处理方式
 
+#### 数据库操作 (Phase 4)
+- **数据库连接** (`db_connect`) - 创建SQLite数据库连接
+- **数据库查询** (`db_query`) - 执行SELECT查询语句，返回结果列表
+- **数据库执行** (`db_execute`) - 执行INSERT/UPDATE/DELETE等SQL语句
+
+#### Excel操作 (Phase 4)
+- **读取Excel** (`excel_read`) - 读取Excel文件数据，支持表头和范围选择
+- **写入Excel** (`excel_write`) - 向Excel文件写入数据，支持追加模式
+- **创建Excel** (`excel_create`) - 创建新的Excel文件，支持多工作表
+
+#### Web操作 (Phase 4)
+- **HTTP请求** (`http_request`) - 发送HTTP请求，支持GET/POST/PUT/DELETE等
+- **网页抓取** (`web_scrape`) - 抓取网页内容，提取文本或HTML
+
+#### 控制流 (Phase 4)
+- **延迟执行** (`delay`) - 暂停流程执行指定时间
+- **等待条件** (`wait_for`) - 等待变量存在/为真/表达式成立
+
 ## 快速开始
 
 ### 安装
@@ -247,20 +265,29 @@ rpa-automation-tool/
 │   │   ├── file_nodes.py   # 文件操作节点
 │   │   ├── system_nodes.py # 系统操作节点
 │   │   ├── sftp_nodes.py   # SFTP节点
-│   │   ├── ftp_nodes.py    # FTP节点 (Phase 3)
-│   │   ├── xml_nodes.py    # XML操作节点 (Phase 3)
+│   │   ├── ftp_nodes.py    # FTP节点
+│   │   ├── xml_nodes.py    # XML操作节点
 │   │   ├── logic_nodes.py  # 逻辑控制节点（条件/循环）
 │   │   ├── math_nodes.py   # 数学运算节点
-│   │   └── string_nodes.py # 字符串操作节点
+│   │   ├── string_nodes.py # 字符串操作节点
+│   │   ├── database_nodes.py # 数据库操作节点 (Phase 4)
+│   │   ├── excel_nodes.py  # Excel操作节点 (Phase 4)
+│   │   ├── web_nodes.py    # Web操作节点 (Phase 4)
+│   │   └── delay_nodes.py  # 延迟/等待节点 (Phase 4)
 │   ├── api/                # REST API
 │   │   ├── __init__.py
 │   │   └── server.py       # FastAPI服务器
+│   ├── static/             # 前端静态文件 (Phase 4)
+│   │   ├── index.html      # 前端设计器页面
+│   │   ├── css/style.css   # 样式表
+│   │   └── js/app.js       # 前端应用
 │   └── utils/              # 工具函数
 │       └── __init__.py
 ├── tests/                  # 测试文件
 │   ├── test_engine.py      # 核心引擎测试
 │   ├── test_phase2_nodes.py # Phase 2节点测试
-│   └── test_phase3_nodes.py # Phase 3节点测试
+│   ├── test_phase3_nodes.py # Phase 3节点测试
+│   └── test_phase4_nodes.py # Phase 4节点测试
 ├── examples/               # 示例流程
 ├── pyproject.toml          # 项目配置
 ├── .gitignore             # Git忽略文件
@@ -472,6 +499,27 @@ CMD ["python", "-m", "rpa_engine", "serve", "--host", "0.0.0.0", "--port", "8000
 docker build -t rpa-automation-tool .
 docker run -p 8000:8000 rpa-automation-tool
 ```
+
+## Web前端设计器
+
+项目包含一个可视化流程设计器，通过浏览器访问即可使用：
+
+```bash
+# 启动API服务器
+python -m rpa_engine serve --host 0.0.0.0 --port 8000
+
+# 浏览器访问
+# http://localhost:8000
+```
+
+### 功能特性
+- 🎨 可视化流程编排
+- 🖱️ 拖拽式节点添加
+- 🔗 节点连线
+- ⚙️ 属性配置面板
+- 💾 流程保存/加载
+- ▶️ 一键执行流程
+- 📊 执行结果展示
 
 ## 许可证
 

@@ -703,7 +703,8 @@ class TestPhase2Integration:
             assert node_type in NODE_REGISTRY, f"节点类型 {node_type} 未注册"
 
         definitions = get_all_node_definitions()
-        assert len(definitions) == len(expected_nodes)
+        # 只检查Phase 1+2的节点是否都存在
+        assert len(definitions) >= len(expected_nodes)
 
     def test_node_type_enum_completeness(self):
         """测试NodeType枚举完整性"""

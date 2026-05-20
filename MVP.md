@@ -346,7 +346,7 @@ POST /api/flows/{flow_id}/execute - 执行流程
 | Phase 1 | 核心数据模型 + 执行引擎 + REST API | ✅ 已完成 | 1 周 |
 | Phase 2 | Python执行节点 + 文件操作 + 系统命令 + SFTP + 逻辑控制 + 数据处理 | ✅ 已完成 | 1 周 |
 | Phase 3 | FTP操作 + SFTP写入 + XML保存 + 路径检查 | ✅ 已完成 | 1 周 |
-| Phase 4 | 前端设计器原型 (React/Vue + ReactFlow) | 📋 待开始 | 1 周 |
+| Phase 4 | 数据库 + Excel + Web + 延迟节点 + Web前端设计器 | ✅ 已完成 | 1 周 |
 | Phase 5 | 测试完善 + 文档 + 生产部署 | 📋 待开始 | 1 周 |
 
 ### Phase 2 新增功能
@@ -404,6 +404,55 @@ POST /api/flows/{flow_id}/execute - 执行流程
   - 支持编码: UTF-8, GBK, GB2312, ASCII
   - 存在处理: 忽略(ignore)/报错(error)/备份(backup)/删除(delete)
   - 自动将字典/列表数据转换为XML结构
+
+### Phase 4 新增功能
+
+#### 数据库操作节点
+- **数据库连接** (`db_connect`) - 创建SQLite数据库连接
+  - 参数: db_path(数据库路径), db_type(数据库类型)
+  - 输出: db_connection(连接对象), db_connect_result(连接结果)
+- **数据库查询** (`db_query`) - 执行SELECT查询语句
+  - 参数: db_connection, sql, params
+  - 输出: query_result(查询结果，包含rows和row_count)
+- **数据库执行** (`db_execute`) - 执行INSERT/UPDATE/DELETE语句
+  - 参数: db_connection, sql, params, commit
+  - 输出: execute_result(执行结果，包含affected_rows)
+
+#### Excel操作节点
+- **读取Excel** (`excel_read`) - 读取Excel文件数据
+  - 参数: file_path, sheet_name, range, has_header
+  - 输出: excel_data(数据列表，支持字典格式)
+- **写入Excel** (`excel_write`) - 向Excel写入数据
+  - 参数: file_path, sheet_name, data, start_cell, append
+  - 输出: write_result(写入结果)
+- **创建Excel** (`excel_create`) - 创建新的Excel文件
+  - 参数: file_path, sheet_names, headers, data
+  - 输出: create_result(创建结果)
+
+#### Web操作节点
+- **HTTP请求** (`http_request`) - 发送HTTP请求
+  - 支持GET/POST/PUT/DELETE/PATCH方法
+  - 参数: url, method, headers, body, timeout
+  - 输出: response(响应结果，包含status_code, body, json)
+- **网页抓取** (`web_scrape`) - 抓取网页内容
+  - 参数: url, extract(text/html), encoding, timeout
+  - 输出: scrape_result(抓取结果，包含content, title)
+
+#### 控制流节点
+- **延迟执行** (`delay`) - 暂停流程指定时间
+  - 参数: seconds(延迟秒数), message(提示信息)
+  - 输出: delay_result(延迟结果)
+- **等待条件** (`wait_for`) - 等待条件满足
+  - 支持: variable_exists/variable_true/python_expression/time
+  - 参数: condition_type, variable_name, expression, timeout, poll_interval
+  - 输出: wait_result(等待结果)
+
+#### Web前端设计器
+- 可视化流程编排界面
+- 拖拽式节点添加
+- 节点连线和属性配置
+- 流程保存/加载/执行
+- 执行结果展示
 
 ---
 

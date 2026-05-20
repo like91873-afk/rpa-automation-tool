@@ -14,6 +14,10 @@ from .logic_nodes import ConditionNode, LoopNode
 from .math_nodes import MathOperationNode
 from .string_nodes import StringOperationNode
 from .xml_nodes import XMLSaveNode
+from .database_nodes import DBConnectNode, DBQueryNode, DBExecuteNode
+from .excel_nodes import ExcelReadNode, ExcelWriteNode, ExcelCreateNode
+from .web_nodes import HTTPRequestNode, WebScrapeNode
+from .delay_nodes import DelayNode, WaitForNode
 
 # 节点注册表
 NODE_REGISTRY = {
@@ -46,6 +50,20 @@ NODE_REGISTRY = {
     "xml_save": XMLSaveNode,
     "math_operation": MathOperationNode,
     "string_operation": StringOperationNode,
+    # 数据库操作
+    "db_connect": DBConnectNode,
+    "db_query": DBQueryNode,
+    "db_execute": DBExecuteNode,
+    # Excel操作
+    "excel_read": ExcelReadNode,
+    "excel_write": ExcelWriteNode,
+    "excel_create": ExcelCreateNode,
+    # Web操作
+    "http_request": HTTPRequestNode,
+    "web_scrape": WebScrapeNode,
+    # 控制流
+    "delay": DelayNode,
+    "wait_for": WaitForNode,
 }
 
 
@@ -94,6 +112,20 @@ __all__ = [
     "XMLSaveNode",
     "MathOperationNode",
     "StringOperationNode",
+    # 数据库
+    "DBConnectNode",
+    "DBQueryNode",
+    "DBExecuteNode",
+    # Excel
+    "ExcelReadNode",
+    "ExcelWriteNode",
+    "ExcelCreateNode",
+    # Web
+    "HTTPRequestNode",
+    "WebScrapeNode",
+    # 控制流
+    "DelayNode",
+    "WaitForNode",
     # 工具函数
     "NODE_REGISTRY",
     "get_node_class",

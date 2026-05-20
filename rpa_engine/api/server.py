@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from ..engine import ExecutionEngine
@@ -54,6 +56,21 @@ engine = ExecutionEngine()
 # 流程存储目录
 FLOWS_DIR = Path("./flows")
 FLOWS_DIR.mkdir(exist_ok=True)
+
+# 静态文件目录
+STATIC_DIR = Path(__file__).parent.parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+# 前端页面
+@app.get("/")
+async def index():
+    """前端设计器页面"""
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {"message": "RPA自动化工具 API", "docs": "/docs"}
 
 
 # API响应模型

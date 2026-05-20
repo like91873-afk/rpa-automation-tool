@@ -34,6 +34,20 @@ class NodeType(str, Enum):
     XML_SAVE = "xml_save"                 # 数据保存为XML
     MATH_OPERATION = "math_operation"     # 数值运算
     STRING_OPERATION = "string_operation" # 字符串操作
+    # 数据库操作
+    DB_CONNECT = "db_connect"             # 数据库连接
+    DB_QUERY = "db_query"                 # 数据库查询
+    DB_EXECUTE = "db_execute"             # 数据库执行SQL
+    # Excel操作
+    EXCEL_READ = "excel_read"             # 读取Excel
+    EXCEL_WRITE = "excel_write"           # 写入Excel
+    EXCEL_CREATE = "excel_create"         # 创建Excel
+    # Web操作
+    HTTP_REQUEST = "http_request"         # HTTP请求
+    WEB_SCRAPE = "web_scrape"             # 网页抓取
+    # 延迟/等待
+    DELAY = "delay"                       # 延迟执行
+    WAIT_FOR = "wait_for"                 # 等待条件
 
 
 class InputType(str, Enum):

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPA 自动化工具 - 流程设计器</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <header class="navbar">
+            <div class="navbar-brand">
+                <span class="logo">⚡</span>
+                <h1>RPA 流程设计器</h1>
+            </div>
+            <div class="navbar-actions">
+                <button id="btn-new-flow" class="btn btn-secondary" title="新建流程">📄 新建</button>
+                <button id="btn-save-flow" class="btn btn-secondary" title="保存流程">💾 保存</button>
+                <button id="btn-load-flow" class="btn btn-secondary" title="加载流程">📂 加载</button>
+                <button id="btn-run-flow" class="btn btn-primary" title="执行流程">▶ 执行</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <!-- 左侧节点面板 -->
+            <aside class="node-panel" id="node-panel">
+                <div class="panel-header">
+                    <h3>节点库</h3>
+                    <input type="text" id="node-search" placeholder="搜索节点..." class="search-input">
+                </div>
+                <div class="node-categories" id="node-categories">
+                    <!-- 动态生成 -->
+                </div>
+            </aside>
+
+            <!-- 中间画布区域 -->
+            <main class="canvas-area">
+                <div class="canvas-toolbar">
+                    <button id="btn-zoom-in" class="btn-icon" title="放大">🔍+</button>
+                    <button id="btn-zoom-out" class="btn-icon" title="缩小">🔍-</button>
+                    <button id="btn-zoom-fit" class="btn-icon" title="适应画布">⊞</button>
+                    <span class="zoom-level" id="zoom-level">100%</span>
+                    <div class="toolbar-separator"></div>
+                    <button id="btn-delete" class="btn-icon btn-danger" title="删除选中">🗑 删除</button>
+                </div>
+                <div class="canvas-container" id="canvas-container">
+                    <svg id="connections-svg" class="connections-svg"></svg>
+                    <div id="nodes-container" class="nodes-container"></div>
+                </div>
+            </main>
+
+            <!-- 右侧属性面板 -->
+            <aside class="properties-panel" id="properties-panel">
+                <div class="panel-header">
+                    <h3>属性配置</h3>
+                </div>
+                <div class="properties-content" id="properties-content">
+                    <div class="empty-state">
+                        <p>选择一个节点查看和编辑属性</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <span id="status-text">就绪</span>
+            <span id="node-count">节点: 0</span>
+            <span id="connection-count">连接: 0</span>
+        </footer>
+
+        <!-- 执行结果弹窗 -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal" id="execution-modal">
+                <div class="modal-header">
+                    <h3 id="modal-title">执行结果</h3>
+                    <button class="btn-close" id="btn-modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- 动态内容 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件加载弹窗 -->
+        <div id="load-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>加载流程</h3>
+                    <button class="btn-close" id="btn-load-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>选择加载方式:</p>
+                    <div class="load-options">
+                        <button id="btn-load-server" class="btn btn-secondary">从服务器加载</button>
+                        <button id="btn-load-file" class="btn btn-secondary">从本地文件加载</button>
+                    </div>
+                    <div id="server-flows-list" class="server-flows-list hidden"></div>
+                    <input type="file" id="file-input" accept=".json" class="hidden">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
