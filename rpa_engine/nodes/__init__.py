@@ -18,6 +18,11 @@ from .database_nodes import DBConnectNode, DBQueryNode, DBExecuteNode
 from .excel_nodes import ExcelReadNode, ExcelWriteNode, ExcelCreateNode
 from .web_nodes import HTTPRequestNode, WebScrapeNode
 from .delay_nodes import DelayNode, WaitForNode
+from .phase5_nodes import (
+    FormulaNode, EmailConnectNode, EmailFetchNode, EmailSendNode,
+    TimeGetNode, TimeProcessNode, FileCompressNode, FileDecompressNode,
+    PDFParseNode, FTPDeleteNode, SFTPCreateDirNode
+)
 
 # 节点注册表
 NODE_REGISTRY = {
@@ -64,6 +69,18 @@ NODE_REGISTRY = {
     # 控制流
     "delay": DelayNode,
     "wait_for": WaitForNode,
+    # Phase 5 新增节点
+    "formula": FormulaNode,
+    "email_connect": EmailConnectNode,
+    "email_fetch": EmailFetchNode,
+    "email_send": EmailSendNode,
+    "time_get": TimeGetNode,
+    "time_process": TimeProcessNode,
+    "file_compress": FileCompressNode,
+    "file_decompress": FileDecompressNode,
+    "pdf_parse": PDFParseNode,
+    "ftp_delete": FTPDeleteNode,
+    "sftp_create_dir": SFTPCreateDirNode,
 }
 
 
@@ -126,6 +143,18 @@ __all__ = [
     # 控制流
     "DelayNode",
     "WaitForNode",
+    # Phase 5 新增节点
+    "FormulaNode",
+    "EmailConnectNode",
+    "EmailFetchNode",
+    "EmailSendNode",
+    "TimeGetNode",
+    "TimeProcessNode",
+    "FileCompressNode",
+    "FileDecompressNode",
+    "PDFParseNode",
+    "FTPDeleteNode",
+    "SFTPCreateDirNode",
     # 工具函数
     "NODE_REGISTRY",
     "get_node_class",

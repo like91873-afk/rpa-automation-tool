@@ -68,6 +68,29 @@
 - **延迟执行** (`delay`) - 暂停流程执行指定时间
 - **等待条件** (`wait_for`) - 等待变量存在/为真/表达式成立
 
+#### 邮件操作 (Phase 5)
+- **邮箱连接** (`email_connect`) - 创建IMAP邮箱连接，支持SSL加密
+- **邮件获取** (`email_fetch`) - 从邮箱获取邮件列表，支持搜索条件
+- **邮件发送** (`email_send`) - 通过SMTP发送邮件，支持TLS加密
+
+#### 时间处理 (Phase 5)
+- **时间获取** (`time_get`) - 获取当前时间、时间戳、年月日时分秒，支持时区
+- **时间处理** (`time_process`) - 时间加减运算和格式转换
+
+#### 文件压缩 (Phase 5)
+- **文件压缩** (`file_compress`) - 将文件/目录压缩为zip格式，支持压缩级别
+- **文件解压** (`file_decompress`) - 解压zip文件，支持覆盖控制
+
+#### PDF解析 (Phase 5)
+- **PDF解析** (`pdf_parse`) - 提取PDF文件文本内容，支持页码范围
+
+#### FTP/SFTP增强 (Phase 5)
+- **FTP删除** (`ftp_delete`) - 删除FTP服务器上的文件
+- **SFTP创建目录** (`sftp_create_dir`) - 在SFTP服务器上创建目录，支持递归创建
+
+#### 数据处理 (Phase 5)
+- **公式计算** (`formula`) - 数学表达式计算，支持${var}变量引用语法
+
 ## 快速开始
 
 ### 安装
@@ -273,7 +296,8 @@ rpa-automation-tool/
 │   │   ├── database_nodes.py # 数据库操作节点 (Phase 4)
 │   │   ├── excel_nodes.py  # Excel操作节点 (Phase 4)
 │   │   ├── web_nodes.py    # Web操作节点 (Phase 4)
-│   │   └── delay_nodes.py  # 延迟/等待节点 (Phase 4)
+│   │   ├── delay_nodes.py  # 延迟/等待节点 (Phase 4)
+│   │   └── phase5_nodes.py # Phase 5节点（公式/邮件/时间/压缩/PDF）
 │   ├── api/                # REST API
 │   │   ├── __init__.py
 │   │   └── server.py       # FastAPI服务器
@@ -287,7 +311,8 @@ rpa-automation-tool/
 │   ├── test_engine.py      # 核心引擎测试
 │   ├── test_phase2_nodes.py # Phase 2节点测试
 │   ├── test_phase3_nodes.py # Phase 3节点测试
-│   └── test_phase4_nodes.py # Phase 4节点测试
+│   ├── test_phase4_nodes.py # Phase 4节点测试
+│   └── test_phase5_nodes.py # Phase 5节点测试
 ├── examples/               # 示例流程
 ├── pyproject.toml          # 项目配置
 ├── .gitignore             # Git忽略文件

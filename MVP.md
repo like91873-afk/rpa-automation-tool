@@ -347,7 +347,7 @@ POST /api/flows/{flow_id}/execute - 执行流程
 | Phase 2 | Python执行节点 + 文件操作 + 系统命令 + SFTP + 逻辑控制 + 数据处理 | ✅ 已完成 | 1 周 |
 | Phase 3 | FTP操作 + SFTP写入 + XML保存 + 路径检查 | ✅ 已完成 | 1 周 |
 | Phase 4 | 数据库 + Excel + Web + 延迟节点 + Web前端设计器 | ✅ 已完成 | 1 周 |
-| Phase 5 | 测试完善 + 文档 + 生产部署 | 📋 待开始 | 1 周 |
+| Phase 5 | 公式计算 + 邮件操作 + 时间处理 + 文件压缩/PDF + FTP删除 + SFTP目录 | ✅ 已完成 | 1 周 |
 
 ### Phase 2 新增功能
 
@@ -453,6 +453,53 @@ POST /api/flows/{flow_id}/execute - 执行流程
 - 节点连线和属性配置
 - 流程保存/加载/执行
 - 执行结果展示
+
+### Phase 5 新增功能
+
+#### 公式计算节点
+- **公式计算** (`formula`) - 支持数学表达式计算
+  - 参数: formula(数学表达式，支持${var}变量引用), variables(变量映射JSON)
+  - 输出: result(计算结果)
+
+#### 邮件操作节点
+- **邮箱连接** (`email_connect`) - 创建IMAP邮箱连接
+  - 参数: host, port, username, password, use_ssl
+  - 输出: connection(连接对象), success(是否成功)
+- **邮件获取** (`email_fetch`) - 从邮箱获取邮件列表
+  - 参数: connection, folder(INBOX), limit(10), search_criteria(ALL)
+  - 输出: emails(邮件列表), count(数量)
+- **邮件发送** (`email_send`) - 通过SMTP发送邮件
+  - 参数: smtp_host, smtp_port, username, password, to, subject, body, use_tls
+  - 输出: success, error
+
+#### 时间处理节点
+- **时间获取** (`time_get`) - 获取当前时间和时间戳
+  - 参数: format(时间格式), timezone(时区)
+  - 输出: datetime, timestamp, year, month, day, hour, minute, second
+- **时间处理** (`time_process`) - 时间加减和格式转换
+  - 参数: datetime_str, input_format, output_format, days, hours, minutes
+  - 输出: result(处理后时间), timestamp
+
+#### 文件压缩/解压节点
+- **文件压缩** (`file_compress`) - 压缩文件/目录为zip
+  - 参数: source_path, output_path, compression_level(0-9)
+  - 输出: success, output_path, file_size
+- **文件解压** (`file_decompress`) - 解压zip文件
+  - 参数: zip_path, output_dir, overwrite
+  - 输出: success, extracted_files, file_count
+
+#### PDF解析节点
+- **PDF解析** (`pdf_parse`) - 提取PDF文本内容
+  - 参数: pdf_path, page_range(all)
+  - 输出: text(文本), page_count(总页数), extracted_pages(提取页数)
+
+#### FTP/SFTP增强
+- **FTP删除** (`ftp_delete`) - 删除FTP服务器文件
+  - 参数: connection, remote_path
+  - 输出: success, error
+- **SFTP创建目录** (`sftp_create_dir`) - 在SFTP服务器创建目录
+  - 参数: connection, remote_path, recursive(True)
+  - 输出: success, error
 
 ---
 

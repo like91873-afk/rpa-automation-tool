@@ -48,6 +48,18 @@ class NodeType(str, Enum):
     # 延迟/等待
     DELAY = "delay"                       # 延迟执行
     WAIT_FOR = "wait_for"                 # 等待条件
+    # Phase 5 新增节点
+    FORMULA = "formula"                   # 公式计算
+    EMAIL_CONNECT = "email_connect"       # 邮箱连接
+    EMAIL_FETCH = "email_fetch"           # 邮件获取
+    EMAIL_SEND = "email_send"             # 邮件发送
+    TIME_GET = "time_get"                 # 时间获取
+    TIME_PROCESS = "time_process"         # 时间处理
+    FILE_COMPRESS = "file_compress"       # 文件压缩
+    FILE_DECOMPRESS = "file_decompress"   # 文件解压
+    PDF_PARSE = "pdf_parse"               # PDF解析
+    FTP_DELETE = "ftp_delete"             # FTP删除
+    SFTP_CREATE_DIR = "sftp_create_dir"   # SFTP创建目录
 
 
 class InputType(str, Enum):

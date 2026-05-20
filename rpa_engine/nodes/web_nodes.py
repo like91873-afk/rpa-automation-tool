@@ -5,7 +5,7 @@ Web操作节点
 """
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext

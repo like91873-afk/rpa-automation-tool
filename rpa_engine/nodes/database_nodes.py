@@ -5,7 +5,7 @@
 """
 
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext

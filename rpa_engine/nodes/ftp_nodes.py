@@ -4,7 +4,7 @@ FTP操作节点
 提供FTP连接、目录查看等操作
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext

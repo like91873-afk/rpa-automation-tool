@@ -7,7 +7,7 @@ Python代码执行节点
 import sys
 import traceback
 from io import StringIO
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext

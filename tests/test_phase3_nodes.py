@@ -4,7 +4,6 @@ RPA引擎 - Phase 3 测试
 测试新增的FTP、SFTP写入、XML保存、路径检查节点
 """
 
-import json
 import os
 import sys
 import tempfile

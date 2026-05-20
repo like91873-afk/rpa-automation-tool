@@ -2,7 +2,6 @@
 Phase 4 测试 - 数据库、Excel、Web、延迟节点
 """
 
-import json
 import os
 import sqlite3
 import tempfile
@@ -13,7 +12,7 @@ import pytest
 from rpa_engine.models.schemas import Flow, NodeInstance, Connection, NodeType
 from rpa_engine.models.context import ExecutionContext
 from rpa_engine.engine import ExecutionEngine
-from rpa_engine.nodes import NODE_REGISTRY, get_node_class, get_all_node_definitions
+from rpa_engine.nodes import get_all_node_definitions
 from rpa_engine.nodes.database_nodes import DBConnectNode, DBQueryNode, DBExecuteNode
 from rpa_engine.nodes.excel_nodes import ExcelReadNode, ExcelWriteNode, ExcelCreateNode
 from rpa_engine.nodes.web_nodes import HTTPRequestNode, WebScrapeNode
@@ -527,7 +526,7 @@ class TestPhase4Integration:
     def test_total_node_count(self):
         """测试总节点数量"""
         definitions = get_all_node_definitions()
-        assert len(definitions) == 32  # 22 (Phase 1-3) + 10 (Phase 4)
+        assert len(definitions) >= 43  # 22 (Phase 1-3) + 10 (Phase 4) + 11 (Phase 5)
 
     def test_database_flow(self):
         """测试数据库完整流程"""

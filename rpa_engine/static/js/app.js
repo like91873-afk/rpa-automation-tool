@@ -68,6 +68,10 @@ function getNodeColor(category) {
         'Excel': '#22c55e',
         'Web': '#6366f1',
         '控制流': '#a855f7',
+        '邮件操作': '#ef4444',
+        '时间处理': '#14b8a6',
+        'FTP操作': '#0ea5e9',
+        'SFTP操作': '#0d9488',
     };
     return colors[category] || '#64748b';
 }
@@ -84,6 +88,10 @@ function getNodeIcon(category) {
         'Excel': '📗',
         'Web': '🌍',
         '控制流': '⏱️',
+        '邮件操作': '📧',
+        '时间处理': '⏰',
+        'FTP操作': '📤',
+        'SFTP操作': '🔒',
     };
     return icons[category] || '📦';
 }

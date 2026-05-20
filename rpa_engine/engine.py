@@ -10,7 +10,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from .models.schemas import (
-    Connection,
     ExecutionResult,
     ExecutionStatus,
     Flow,
@@ -18,7 +17,7 @@ from .models.schemas import (
     NodeType,
 )
 from .models.context import ExecutionContext
-from .nodes import get_node_class, NODE_REGISTRY
+from .nodes import get_node_class
 
 
 class ExecutionEngine:

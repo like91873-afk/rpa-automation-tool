@@ -4,7 +4,7 @@ SFTP操作节点
 提供SFTP连接、上传、下载等操作
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext

@@ -8,7 +8,6 @@ import os
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Any, Dict
-from pathlib import Path
 
 from ..models.schemas import NodeDefinition, NodeInput, NodeOutput, NodeType, InputType
 from ..models.context import ExecutionContext
@@ -104,7 +103,7 @@ class XMLSaveNode(BaseNode):
                 self._dict_to_xml(value, clean_key, root)
         elif isinstance(data, list):
             for i, item in enumerate(data):
-                self._dict_to_xml(item, f"item", root)
+                self._dict_to_xml(item, "item", root)
         else:
             root.text = str(data) if data is not None else ""
 

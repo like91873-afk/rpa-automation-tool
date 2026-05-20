@@ -20,6 +20,8 @@ dependencies = [
     "python-multipart>=0.0.6",
     "aiofiles>=23.2.1",
     "openpyxl>=3.1.0",
+    "PyPDF2>=3.0.0",
+    "pytz>=2023.3",
 ]
 
 [project.optional-dependencies]
